@@ -3,6 +3,7 @@
 //
 
 #include "parser.h"
+#include "error.h"
 
 #include "misc/size.hpp"
 #include "misc/fatal.h"
@@ -28,25 +29,27 @@ namespace fuzzyrat {
 
 ProductionMap Parser::operator()(Lexer &lexer) {
     this->lexer = &lexer;
+    this->fetchNext();
 
     ProductionMap map;
     while(this->curKind != EOS) {
-        auto pair = map.insert(this->parse_production());
-        if(!pair.second) {
-            fatal("already defined production\n");
+        auto pair = this->parse_production();
+        std::string name = this->lexer->toTokenText(pair.first);
+        if(!map.insert(std::make_pair(std::move(name), std::move(pair.second))).second) {
+            throw SemanticError(SemanticError::DefinedProduction, pair.first);
         }
     }
     this->expect(EOS);
     return map;
 }
 
-std::pair<std::string, NodePtr> Parser::parse_production() {
+std::pair<Token, NodePtr> Parser::parse_production() {
     Token token = this->expect(IDENTIFIER);
     this->expect(DEF);
     auto node = this->parse_choice();
     this->expect(SEMI_COLON);
 
-    return std::make_pair(this->lexer->toTokenText(token), std::move(node));
+    return std::make_pair(token, std::move(node));
 }
 
 NodePtr Parser::parse_choice() {

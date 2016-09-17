@@ -40,20 +40,27 @@ const char *toString(TokenKind kind);
 class Lexer : public ydsh::parser_base::LexerBase {
 private:
     const char *fileName_;
-    unsigned int lineNum_;
 
 public:
     NON_COPYABLE(Lexer);
 
-    Lexer(const char *fileName, FILE *fp) : LexerBase(fp), fileName_(fileName), lineNum_(1) {}
+    Lexer(const char *fileName, FILE *fp) : LexerBase(fp), fileName_(fileName) {}
     ~Lexer() = default;
 
     const char *filename() const {
         return this->fileName_;
     }
 
-    unsigned int lineNum() const {
-        return this->lineNum_;
+    unsigned int getLineNum(Token token) const {
+        assert(this->withinRange(token));
+
+        unsigned int n = 1;
+        for(unsigned int i = 0; i < token.pos; i++) {
+            if(this->buf[i] == '\n') {
+                n++;
+            }
+        }
+        return n;
     }
 
     TokenKind nextToken(Token &token);

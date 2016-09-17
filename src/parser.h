@@ -21,7 +21,7 @@ public:
     ProductionMap operator()(Lexer &lexer);
 
 private:
-    std::pair<std::string, NodePtr> parse_production();
+    std::pair<Token, NodePtr> parse_production();
     NodePtr parse_choice();
     NodePtr parse_sequence();
     NodePtr parse_prefix();

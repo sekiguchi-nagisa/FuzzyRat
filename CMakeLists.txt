@@ -44,7 +44,8 @@ set(SOURCE_FILES
         src/main.cpp
         ${lexer_src}
         src/node.cpp
-        src/parser.cpp)
+        src/parser.cpp
+        src/error.cpp)
 
 include_directories(src)
 add_executable(FuzzyRat ${SOURCE_FILES})
