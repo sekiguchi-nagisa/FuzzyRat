@@ -5,12 +5,13 @@
 #ifndef FUZZYRAT_VERIFY_H
 #define FUZZYRAT_VERIFY_H
 
-#include "node.h"
 #include "error.h"
 
 namespace fuzzyrat {
 
-void verify(ProductionMap &map) throw(SemanticError);
+class GrammarState;
+
+void verify(GrammarState &state) throw(SemanticError);
 
 } // namespace fuzzyrat
 

@@ -28,20 +28,23 @@ namespace fuzzyrat {
 // ##     Parser     ##
 // ####################
 
-ProductionMap Parser::operator()(Lexer &lexer) {
-    this->lexer = &lexer;
+void Parser::operator()(GrammarState &state) {
+    this->lexer = &state.lexer();
     this->fetchNext();
 
-    ProductionMap map;
-    while(this->curKind != EOS) {
+    for(unsigned int index = 0; this->curKind != EOS; index++) {
         auto pair = this->parse_production();
         std::string name = this->lexer->toTokenText(pair.first);
-        if(!map.insert(std::make_pair(std::move(name), std::move(pair.second))).second) {
+
+        if(index == 0 && state.startSymbol().empty()) {
+            state.setStartSymbol(name);
+        }
+
+        if(!state.map().insert(std::make_pair(std::move(name), std::move(pair.second))).second) {
             throw SemanticError(SemanticError::DefinedProduction, pair.first);
         }
     }
     this->expect(EOS);
-    return map;
 }
 
 std::pair<Token, NodePtr> Parser::parse_production() {

@@ -6,7 +6,7 @@
 #define FUZZYRAT_PARSER_H
 
 #include "misc/parser_base.hpp"
-#include "lexer.h"
+#include "state.h"
 #include "node.h"
 
 namespace fuzzyrat {
@@ -18,7 +18,7 @@ public:
     Parser() = default;
     ~Parser() = default;
 
-    ProductionMap operator()(Lexer &lexer);
+    void operator()(GrammarState &state);
 
 private:
     std::pair<Token, NodePtr> parse_production();

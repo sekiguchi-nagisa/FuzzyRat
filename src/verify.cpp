@@ -3,6 +3,8 @@
 //
 
 #include "verify.h"
+#include "state.h"
+#include "node.h"
 
 namespace fuzzyrat {
 
@@ -85,16 +87,8 @@ void NonTerminalVerifier::visit(ZeroOrMoreNode &node) {
 
 
 
-void verify(ProductionMap &map) throw(SemanticError) {
-    std::vector<NodeVerifier *> verifier;
-
-    // register verifier
-    NonTerminalVerifier nonTerminalVerifier;
-    verifier.push_back(&nonTerminalVerifier);
-
-    for(auto &v : verifier) {
-        v->verify(map);
-    }
+void verify(GrammarState &state) throw(SemanticError) {
+    NonTerminalVerifier().verify(state.map());
 }
 
 } // namespace fuzzyrat

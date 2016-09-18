@@ -6,6 +6,7 @@
 #define FUZZYRAT_LOGGER_HPP
 
 #include <iostream>
+#include <cstdlib>
 
 #include "misc/noncopyable.h"
 
@@ -39,6 +40,12 @@ private:
 public:
     ~Logger();
 
+    /**
+     *
+     * @param level
+     * if level is error, exit(1)
+     * @return
+     */
     std::ostream &stream(LogLevel level);
 
     LogLevel level() const {
@@ -72,6 +79,7 @@ do { \
     if(Logger::instance().checkLevel(L)) { \
         Logger::instance().stream(L) << V << std::endl; \
     } \
+    if(L == LogLevel::error) { exit(1); } \
 } while(false)
 
 #define LOG_ERROR(V) LOG(fuzzyrat::LogLevel::error, V)
