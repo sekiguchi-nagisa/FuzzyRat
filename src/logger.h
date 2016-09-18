@@ -5,11 +5,65 @@
 #ifndef FUZZYRAT_LOGGER_HPP
 #define FUZZYRAT_LOGGER_HPP
 
-#define USE_LOGGING
+#include <iostream>
 
-#include "misc/logger_base.hpp"
+#define EACH_LOG_LEVEL(E) \
+    E(error) \
+    E(warn) \
+    E(info) \
+    E(debug)
 
-DEFINE_LOGGING_POLICY("FRAT_", "APPENDER", TRACE_TOKEN);
+namespace fuzzyrat {
+
+enum class LogLevel : unsigned int {
+#define GEN_ENUM(E) E,
+    EACH_LOG_LEVEL(GEN_ENUM)
+#undef GEN_ENUM
+};
+
+
+/**
+ * specify log appender by FRAT_APPENDER=<appender>
+ * specify log level by FRAT_LEVEL=<error, warn, info, debug>
+ */
+class Logger {
+private:
+    std::ostream *stream_;
+
+    LogLevel level_;
+
+    Logger();
+
+public:
+    ~Logger();
+
+    std::ostream &stream(LogLevel level);
+
+    LogLevel level() const {
+        return this->level_;
+    }
+
+    bool checkLevel(LogLevel level) const {
+        return static_cast<unsigned int>(level) <= static_cast<unsigned int>(this->level());
+    }
+
+    static Logger &instance();
+};
+
+} // namespace fuzzyrat
+
+#define LOG(L, V) \
+do { \
+    using namespace fuzzyrat; \
+    if(Logger::instance().checkLevel(L)) { \
+        Logger::instance().stream(L) << V << std::endl; \
+    } \
+} while(false)
+
+#define LOG_ERROR(V) LOG(fuzzyrat::LogLevel::error, V)
+#define LOG_WARN(V) LOG(fuzzyrat::LogLevel::warn, V)
+#define LOG_INFO(V) LOG(fuzzyrat::LogLevel::info, V)
+#define LOG_DEBUG(V) LOG(fuzzyrat::LogLevel::debug, V)
 
 
 #endif //FUZZYRAT_LOGGER_HPP

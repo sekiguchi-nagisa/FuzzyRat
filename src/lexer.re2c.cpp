@@ -88,7 +88,7 @@ TokenKind Lexer::nextToken(Token &token) {
     token.size = 0;
 
     RET:
-    LOG(TRACE_TOKEN, toString(kind) << ", " << token << ", text = " << this->toTokenText(token));
+    LOG_DEBUG("nextToken(): " << toString(kind) << ", " << token << ", text = " << this->toTokenText(token));
     return kind;
 }
 

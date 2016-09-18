@@ -3,6 +3,7 @@
 
 #include "misc/fatal.h"
 
+#include "logger.h"
 #include "parser.h"
 #include "error.h"
 #include "verify.h"
@@ -29,17 +30,19 @@ int main(int argc, char **argv) {
         map = Parser()(lexer);
         verify(map);
     } catch(const ParseError &e) {
-        std::cerr << formatSourceName(lexer, e.getErrorToken()) << " [syntax error] " << e.getMessage() << std::endl;
         Token lineToken = lexer.getLineToken(e.getErrorToken());
-        std::cerr << lexer.toTokenText(lineToken) << std::endl;
-        std::cerr << lexer.formatLineMarker(lineToken, e.getErrorToken()) << std::endl;
+        LOG_ERROR(formatSourceName(lexer, e.getErrorToken())
+                          << " " << e.getMessage() << std::endl
+                          << lexer.toTokenText(lineToken) << std::endl
+                          << lexer.formatLineMarker(lineToken, e.getErrorToken()));
 
         exit(1);
     } catch(const SemanticError &e) {
-        std::cerr << formatSourceName(lexer, e.token()) << " [semantic error] " << toString(e.kind()) << std::endl;
         Token lineToken = lexer.getLineToken(e.token());
-        std::cerr << lexer.toTokenText(lineToken) << std::endl;
-        std::cerr << lexer.formatLineMarker(lineToken, e.token()) << std::endl;
+        LOG_ERROR(formatSourceName(lexer, e.token())
+                          << " " << toString(e.kind()) << std::endl
+                          << lexer.toTokenText(lineToken) << std::endl
+                          << lexer.formatLineMarker(lineToken, e.token()));
 
         exit(1);
     }
