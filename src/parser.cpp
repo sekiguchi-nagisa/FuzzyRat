@@ -4,6 +4,7 @@
 
 #include "parser.h"
 #include "error.h"
+#include "logger.h"
 
 #include "misc/size.hpp"
 #include "misc/fatal.h"
@@ -44,6 +45,8 @@ ProductionMap Parser::operator()(Lexer &lexer) {
 }
 
 std::pair<Token, NodePtr> Parser::parse_production() {
+    FuncTracer tracer(__func__, LogLevel::debug);
+
     Token token = this->expect(IDENTIFIER);
     this->expect(DEF);
     auto node = this->parse_choice();
@@ -53,6 +56,8 @@ std::pair<Token, NodePtr> Parser::parse_production() {
 }
 
 NodePtr Parser::parse_choice() {
+    FuncTracer tracer(__func__, LogLevel::debug);
+
     auto leftNode = this->parse_sequence();
     if(this->curKind == ALT) {
         auto rightNode = this->parse_choice();
@@ -62,6 +67,8 @@ NodePtr Parser::parse_choice() {
 }
 
 NodePtr Parser::parse_sequence() {
+    FuncTracer tracer(__func__, LogLevel::debug);
+
     auto leftNode = this->parse_prefix();
     switch(this->curKind) {
 #define GEN_CASE(E) case E:
@@ -78,6 +85,8 @@ NodePtr Parser::parse_sequence() {
 }
 
 NodePtr Parser::parse_prefix() {
+    FuncTracer tracer(__func__, LogLevel::debug);
+
     switch(this->curKind) {
     case AND: {
         Token token = this->expect(AND);
@@ -93,6 +102,8 @@ NodePtr Parser::parse_prefix() {
 }
 
 NodePtr Parser::parse_suffix() {
+    FuncTracer tracer(__func__, LogLevel::debug);
+
     auto node = this->parse_primary();
     for(bool next = true; next;) {
         switch(this->curKind) {
@@ -114,6 +125,8 @@ NodePtr Parser::parse_suffix() {
 }
 
 NodePtr Parser::parse_primary() {
+    FuncTracer tracer(__func__, LogLevel::debug);
+
     switch(this->curKind) {
     case POPEN: {
         this->expect(POPEN);

@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+#include "misc/noncopyable.h"
+
 #define EACH_LOG_LEVEL(E) \
     E(error) \
     E(warn) \
@@ -50,6 +52,18 @@ public:
     static Logger &instance();
 };
 
+class FuncTracer {
+private:
+    const char *funcName;
+    LogLevel level;
+
+public:
+    NON_COPYABLE(FuncTracer);
+
+    FuncTracer(const char *funcName, LogLevel level);
+    ~FuncTracer();
+};
+
 } // namespace fuzzyrat
 
 #define LOG(L, V) \
@@ -64,6 +78,7 @@ do { \
 #define LOG_WARN(V) LOG(fuzzyrat::LogLevel::warn, V)
 #define LOG_INFO(V) LOG(fuzzyrat::LogLevel::info, V)
 #define LOG_DEBUG(V) LOG(fuzzyrat::LogLevel::debug, V)
+
 
 
 #endif //FUZZYRAT_LOGGER_HPP

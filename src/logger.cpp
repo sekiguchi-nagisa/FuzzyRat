@@ -66,4 +66,17 @@ Logger &Logger::instance() {
     return logger;
 }
 
+// ########################
+// ##     FuncTracer     ##
+// ########################
+
+FuncTracer::FuncTracer(const char *funcName, LogLevel level) : funcName(funcName), level(level) {
+    LOG(this->level, "enter: " << this->funcName << "()");
+}
+
+FuncTracer::~FuncTracer() {
+    LOG(this->level, "exit: " << this->funcName << "()");
+}
+
+
 } // namespace fuzzyrat
