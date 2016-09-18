@@ -5,6 +5,7 @@
 
 #include "parser.h"
 #include "error.h"
+#include "verify.h"
 
 using namespace fuzzyrat;
 
@@ -26,6 +27,7 @@ int main(int argc, char **argv) {
     ProductionMap map;
     try {
         map = Parser()(lexer);
+        verify(map);
     } catch(const ParseError &e) {
         std::cerr << formatSourceName(lexer, e.getErrorToken()) << " [syntax error] " << e.getMessage() << std::endl;
         Token lineToken = lexer.getLineToken(e.getErrorToken());
