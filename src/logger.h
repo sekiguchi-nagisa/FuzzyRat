@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <type_traits>
 
 #include "misc/noncopyable.h"
 
@@ -24,6 +25,14 @@ enum class LogLevel : unsigned int {
 #undef GEN_ENUM
 };
 
+std::ostream &operator<<(std::ostream &, LogLevel);
+
+template <bool cond, typename T>
+using enable_if_t = typename std::enable_if<cond, T>::type;
+
+template <bool cond>
+using enable_when = enable_if_t<cond, std::nullptr_t>;
+
 
 /**
  * specify log appender by FRAT_APPENDER=<appender>
@@ -40,14 +49,6 @@ private:
 public:
     ~Logger();
 
-    /**
-     *
-     * @param level
-     * if level is error, exit(1)
-     * @return
-     */
-    std::ostream &stream(LogLevel level);
-
     LogLevel level() const {
         return this->level_;
     }
@@ -57,30 +58,59 @@ public:
     }
 
     static Logger &instance();
+
+    template <LogLevel level, typename Func, enable_when<level != LogLevel::error> = nullptr>
+    void apply(Func func) {
+        if(this->checkLevel(level)) {
+            auto &s = *this->stream_;
+            s << level << " ";
+            func(s);
+            s << std::endl;
+        }
+    }
+
+    template <LogLevel level, typename Func, enable_when<level == LogLevel::error> = nullptr>
+    [[noreturn]]
+    void apply(Func func) {
+        auto &s = *this->stream_;
+        s << level << " ";
+        func(s);
+        s << std::endl;
+        exit(1);
+    }
 };
 
+template <LogLevel level, typename Func, enable_when<level != LogLevel::error> = nullptr>
+inline void log(Func func) {
+    Logger::instance().apply<level>(std::forward<Func>(func));
+}
+
+template <LogLevel level, typename Func, enable_when<level == LogLevel::error> = nullptr>
+[[noreturn]]
+inline void log(Func func) {
+    Logger::instance().apply<level>(std::forward<Func>(func));
+}
+
+template <LogLevel level>
 class FuncTracer {
 private:
     const char *funcName;
-    LogLevel level;
 
 public:
     NON_COPYABLE(FuncTracer);
 
-    FuncTracer(const char *funcName, LogLevel level);
-    ~FuncTracer();
+    FuncTracer(const char *funcName) : funcName(funcName) {
+        log<level>([&](std::ostream &stream) { stream << "enter:" << this->funcName; });
+    }
+
+    ~FuncTracer() {
+        log<level>([&](std::ostream &stream) { stream << "exit:" << this->funcName; });
+    }
 };
 
 } // namespace fuzzyrat
 
-#define LOG(L, V) \
-do { \
-    using namespace fuzzyrat; \
-    if(Logger::instance().checkLevel(L)) { \
-        Logger::instance().stream(L) << V << std::endl; \
-    } \
-    if(L == LogLevel::error) { exit(1); } \
-} while(false)
+#define LOG(L, V) log<L>([&](std::ostream &stream) { stream << V; })
 
 #define LOG_ERROR(V) LOG(fuzzyrat::LogLevel::error, V)
 #define LOG_WARN(V) LOG(fuzzyrat::LogLevel::warn, V)

@@ -10,10 +10,6 @@
 
 namespace fuzzyrat {
 
-// ####################
-// ##     Logger     ##
-// ####################
-
 static const char *levelStrTable[] = {
 #define GEN_STR(E) #E,
         EACH_LOG_LEVEL(GEN_STR)
@@ -31,6 +27,14 @@ static LogLevel parseLevel(const char *str, LogLevel defaultLevel) {
     }
     return defaultLevel;
 }
+
+std::ostream &operator<<(std::ostream &stream, LogLevel level) {
+    return stream << "[" << levelStrTable[static_cast<unsigned int>(level)] << "]";
+}
+
+// ####################
+// ##     Logger     ##
+// ####################
 
 Logger::Logger() : stream_(nullptr), level_(LogLevel::info) {
     // init appender
@@ -57,26 +61,9 @@ Logger::~Logger() {
     }
 }
 
-std::ostream& Logger::stream(LogLevel level) {
-    return *this->stream_ << "[" << levelStrTable[static_cast<unsigned int>(level)] << "] ";
-}
-
 Logger &Logger::instance() {
     static Logger logger;
     return logger;
 }
-
-// ########################
-// ##     FuncTracer     ##
-// ########################
-
-FuncTracer::FuncTracer(const char *funcName, LogLevel level) : funcName(funcName), level(level) {
-    LOG(this->level, "enter: " << this->funcName << "()");
-}
-
-FuncTracer::~FuncTracer() {
-    LOG(this->level, "exit: " << this->funcName << "()");
-}
-
 
 } // namespace fuzzyrat

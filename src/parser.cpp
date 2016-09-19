@@ -48,7 +48,7 @@ void Parser::operator()(GrammarState &state) {
 }
 
 std::pair<Token, NodePtr> Parser::parse_production() {
-    FuncTracer tracer(__func__, LogLevel::debug);
+    FuncTracer<LogLevel::debug> tracer(__func__);
 
     Token token = this->expect(IDENTIFIER);
     this->expect(DEF);
@@ -59,7 +59,7 @@ std::pair<Token, NodePtr> Parser::parse_production() {
 }
 
 NodePtr Parser::parse_choice() {
-    FuncTracer tracer(__func__, LogLevel::debug);
+    FuncTracer<LogLevel::debug> tracer(__func__);
 
     auto leftNode = this->parse_sequence();
     if(this->curKind == ALT) {
@@ -70,7 +70,7 @@ NodePtr Parser::parse_choice() {
 }
 
 NodePtr Parser::parse_sequence() {
-    FuncTracer tracer(__func__, LogLevel::debug);
+    FuncTracer<LogLevel::debug> tracer(__func__);
 
     auto leftNode = this->parse_prefix();
     switch(this->curKind) {
@@ -88,7 +88,7 @@ NodePtr Parser::parse_sequence() {
 }
 
 NodePtr Parser::parse_prefix() {
-    FuncTracer tracer(__func__, LogLevel::debug);
+    FuncTracer<LogLevel::debug> tracer(__func__);
 
     switch(this->curKind) {
     case AND: {
@@ -105,7 +105,7 @@ NodePtr Parser::parse_prefix() {
 }
 
 NodePtr Parser::parse_suffix() {
-    FuncTracer tracer(__func__, LogLevel::debug);
+    FuncTracer<LogLevel::debug> tracer(__func__);
 
     auto node = this->parse_primary();
     for(bool next = true; next;) {
@@ -128,7 +128,7 @@ NodePtr Parser::parse_suffix() {
 }
 
 NodePtr Parser::parse_primary() {
-    FuncTracer tracer(__func__, LogLevel::debug);
+    FuncTracer<LogLevel::debug> tracer(__func__);
 
     switch(this->curKind) {
     case POPEN: {
