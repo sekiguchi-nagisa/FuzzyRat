@@ -80,6 +80,10 @@ int main(int argc, char **argv) {
         Parser()(state);
 
         // check start production
+        if(state.startSymbol().empty()) {
+            LOG_ERROR("start production not found");
+        }
+
         if(state.map().find(state.startSymbol()) != state.map().end()) {
             LOG_INFO("start production: " << state.startSymbol());
         } else {

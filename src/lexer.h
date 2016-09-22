@@ -10,7 +10,8 @@
 #define EACH_TOKEN_KIND(TOK) \
     TOK(INVALID) \
     TOK(EOS) \
-    TOK(IDENTIFIER) \
+    TOK(TERM) \
+    TOK(NTERM) \
     TOK(DEF) \
     TOK(SEMI_COLON) \
     TOK(DOT) \

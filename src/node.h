@@ -23,10 +23,9 @@ class NodeVisitor;
     E(ZeroOrMore) \
     E(OneOrMore) \
     E(Option) \
-    E(AndPredicate) \
-    E(NotPredicate) \
     E(Sequence) \
-    E(Choice) \
+    E(Alternative) \
+    E(Terminal) \
     E(NonTerminal)
 
 
@@ -166,40 +165,6 @@ public:
     }
 };
 
-class AndPredicateNode : public Node {
-private:
-    NodePtr exprNode_;
-
-public:
-    AndPredicateNode(Token token, NodePtr &&exprNode) :
-            Node(NodeKind::AndPredicate, token), exprNode_(std::move(exprNode)) {
-        this->updateToken(this->exprNode_->token());
-    }
-
-    ~AndPredicateNode() = default;
-
-    NodePtr &exprNode() {
-        return this->exprNode_;
-    }
-};
-
-class NotPredicateNode : public Node {
-private:
-    NodePtr exprNode_;
-
-public:
-    NotPredicateNode(Token token, NodePtr &&exprNode) :
-            Node(NodeKind::NotPredicate, token), exprNode_(std::move(exprNode)) {
-        this->updateToken(this->exprNode_->token());
-    }
-
-    ~NotPredicateNode() = default;
-
-    NodePtr &exprNode() {
-        return this->exprNode_;
-    }
-};
-
 class SequenceNode : public Node {
 private:
     NodePtr leftNode_;
@@ -223,19 +188,19 @@ public:
     }
 };
 
-class ChoiceNode : public Node {
+class AlternativeNode : public Node {
 private:
     NodePtr leftNode_;
     NodePtr rightNode_;
 
 public:
-    ChoiceNode(NodePtr &&leftNode, NodePtr &&rightNode) :
-            Node(NodeKind::Choice, leftNode->token()),
+    AlternativeNode(NodePtr &&leftNode, NodePtr &&rightNode) :
+            Node(NodeKind::Alternative, leftNode->token()),
             leftNode_(std::move(leftNode)), rightNode_(std::move(rightNode)) {
         this->updateToken(this->rightNode_->token());
     }
 
-    ~ChoiceNode() = default;
+    ~AlternativeNode() = default;
 
     NodePtr &leftNode() {
         return this->leftNode_;
@@ -243,6 +208,21 @@ public:
 
     NodePtr &rightNode() {
         return this->rightNode_;
+    }
+};
+
+class TerminalNode : public Node {
+private:
+    std::string name_;
+
+public:
+    TerminalNode(Token token, std::string &&name) :
+            Node(NodeKind::Terminal, token), name_(std::move(name)) {}
+
+    ~TerminalNode() = default;
+
+    const std::string &name() const {
+        return this->name_;
     }
 };
 
@@ -260,6 +240,9 @@ public:
         return this->name_;
     }
 };
+
+bool isTerminal(const std::string &);
+bool isNonTerminal(const std::string &);
 
 using ProductionMap = std::unordered_map<std::string, NodePtr>;
 

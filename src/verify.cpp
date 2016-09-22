@@ -13,13 +13,13 @@ struct NodeVerifier : protected NodeVisitor {
     virtual  void verify(ProductionMap &map) throw(SemanticError) = 0;
 };
 
-class NonTerminalVerifier : public NodeVerifier {
+class SymbolVerifier : public NodeVerifier {
 private:
     ProductionMap *map;
 
 public:
-    NonTerminalVerifier() : map(nullptr) {}
-    ~NonTerminalVerifier() = default;
+    SymbolVerifier() : map(nullptr) {}
+    ~SymbolVerifier() = default;
 
     void verify(ProductionMap &map) throw(SemanticError) override;
 
@@ -30,11 +30,11 @@ private:
 };
 
 
-// #################################
-// ##     NonTerminalVerifier     ##
-// #################################
+// ############################
+// ##     SymbolVerifier     ##
+// ############################
 
-void NonTerminalVerifier::verify(ProductionMap &map) throw(SemanticError) {
+void SymbolVerifier::verify(ProductionMap &map) throw(SemanticError) {
     this->map = &map;
 
     for(auto &e : map) {
@@ -42,53 +42,52 @@ void NonTerminalVerifier::verify(ProductionMap &map) throw(SemanticError) {
     }
 }
 
-void NonTerminalVerifier::visit(AndPredicateNode &node) {
-    node.exprNode()->accept(*this);
-}
+void SymbolVerifier::visit(AnyNode &) {}
 
-void NonTerminalVerifier::visit(AnyNode &) {}
+void SymbolVerifier::visit(CharSetNode &) {}
 
-void NonTerminalVerifier::visit(CharSetNode &) {}
-
-void NonTerminalVerifier::visit(ChoiceNode &node) {
+void SymbolVerifier::visit(AlternativeNode &node) {
     node.leftNode()->accept(*this);
     node.rightNode()->accept(*this);
 }
 
-void NonTerminalVerifier::visit(NonTerminalNode &node) {
+void SymbolVerifier::visit(NonTerminalNode &node) {
     auto iter = this->map->find(node.name());
     if(iter == this->map->end()) {
         throw SemanticError(SemanticError::UndefinedNonTerminal, node.token());
     }
 }
 
-void NonTerminalVerifier::visit(NotPredicateNode &node) {
+void SymbolVerifier::visit(OneOrMoreNode &node) {
     node.exprNode()->accept(*this);
 }
 
-void NonTerminalVerifier::visit(OneOrMoreNode &node) {
+void SymbolVerifier::visit(OptionNode &node) {
     node.exprNode()->accept(*this);
 }
 
-void NonTerminalVerifier::visit(OptionNode &node) {
-    node.exprNode()->accept(*this);
+void SymbolVerifier::visit(TerminalNode &node) {
+    auto iter = this->map->find(node.name());
+    if(iter == this->map->end()) {
+        throw SemanticError(SemanticError::UndefinedTerminal, node.token());
+    }
 }
 
-void NonTerminalVerifier::visit(SequenceNode &node) {
+void SymbolVerifier::visit(SequenceNode &node) {
     node.leftNode()->accept(*this);
     node.rightNode()->accept(*this);
 }
 
-void NonTerminalVerifier::visit(StringNode &) {}
+void SymbolVerifier::visit(StringNode &) {}
 
-void NonTerminalVerifier::visit(ZeroOrMoreNode &node) {
+void SymbolVerifier::visit(ZeroOrMoreNode &node) {
     node.exprNode()->accept(*this);
 }
 
 
 
 void verify(GrammarState &state) throw(SemanticError) {
-    NonTerminalVerifier().verify(state.map());
+    SymbolVerifier().verify(state.map());
 }
 
 } // namespace fuzzyrat

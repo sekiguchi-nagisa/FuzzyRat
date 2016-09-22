@@ -22,11 +22,17 @@ public:
 
 private:
     std::pair<Token, NodePtr> parse_production();
-    NodePtr parse_choice();
+    std::pair<Token, NodePtr> parse_nonTerminalProduction();
+    NodePtr parse_alternative();
     NodePtr parse_sequence();
-    NodePtr parse_prefix();
     NodePtr parse_suffix();
     NodePtr parse_primary();
+
+    std::pair<Token, NodePtr> parse_terminalProduction();
+    NodePtr parse_regexAlt();
+    NodePtr parse_regexSeq();
+    NodePtr parse_regexSuffix();
+    NodePtr parse_regexPrimary();
 };
 
 } // namespace fuzzyrat
