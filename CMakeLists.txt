@@ -47,7 +47,9 @@ set(SOURCE_FILES
         src/parser.cpp
         src/error.cpp
         src/verify.cpp
-        src/logger.cpp)
+        src/logger.cpp
+        src/opcode.cpp
+        src/compile.cpp)
 
 include_directories(src)
 add_executable(FuzzyRat ${SOURCE_FILES})

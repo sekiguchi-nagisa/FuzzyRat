@@ -7,6 +7,7 @@
 #include "parser.h"
 #include "error.h"
 #include "verify.h"
+#include "compile.h"
 
 using namespace fuzzyrat;
 using namespace ydsh;
@@ -104,5 +105,10 @@ int main(int argc, char **argv) {
                           << state.lexer().toTokenText(lineToken) << std::endl
                           << state.lexer().formatLineMarker(lineToken, e.token()));
     }
+
+    ExecState estate;
+    Compiler()(state, estate);
+    
+
     exit(0);
 }

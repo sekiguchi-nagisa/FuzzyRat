@@ -244,11 +244,11 @@ NodePtr Parser::parse_regexPrimary() {
         return unique<AnyNode>(this->expect(DOT));
     case CHARSET: {
         Token token = this->expect(CHARSET);
-        return unique<CharSetNode>(token, this->lexer->toTokenText(token)); //FIXME: unquote
+        return unique<CharSetNode>(token, this->lexer->toTokenText(token));
     }
     case STRING: {
         Token token = this->expect(STRING);
-        return unique<StringNode>(token, this->lexer->toTokenText(token));  //FIXME: unquote
+        return unique<StringNode>(token, this->lexer->toTokenText(token));
     }
     default:
         TokenKind kinds[] = {

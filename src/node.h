@@ -14,7 +14,7 @@
 
 namespace fuzzyrat {
 
-class NodeVisitor;
+struct NodeVisitor;
 
 #define EACH_NODE_KIND(E) \
     E(Any) \
@@ -246,13 +246,8 @@ bool isNonTerminal(const std::string &);
 
 using ProductionMap = std::unordered_map<std::string, NodePtr>;
 
-class NodeVisitor {
-public:
+struct NodeVisitor {
     virtual ~NodeVisitor() = default;
-
-    void visit(Node &node) {
-        node.accept(*this);
-    }
 
 #define GEN_VISIT(E) virtual void visit(E ## Node &) = 0;
     EACH_NODE_KIND(GEN_VISIT)
