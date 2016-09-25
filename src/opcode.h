@@ -119,6 +119,48 @@ struct RetOp : public OpCode {
     ~RetOp() = default;
 };
 
+class CompiledUnit {
+private:
+    /**
+     * indicate start production id
+     */
+    unsigned int statrtId_;
+
+    std::vector<OpCodePtr> codes_;
+
+public:
+    NON_COPYABLE(CompiledUnit);
+
+    CompiledUnit() : statrtId_(0), codes_() {}
+    CompiledUnit(CompiledUnit &&s) : statrtId_(s.statrtId_), codes_(std::move(s.codes_)) {}
+
+    ~CompiledUnit() = default;
+
+    CompiledUnit &operator=(CompiledUnit &&s) noexcept {
+        auto tmp(std::move(s));
+        this->swap(tmp);
+        return *this;
+    }
+
+    void swap(CompiledUnit &e) noexcept {
+        std::swap(this->statrtId_, e.statrtId_);
+        std::swap(this->codes_, e.codes_);
+    }
+
+    unsigned int startId() const {
+        return this->statrtId_;
+    }
+
+    void setStartId(unsigned int id) {
+        this->statrtId_ = id;
+    }
+
+    std::vector<std::shared_ptr<OpCode>> &codes() {
+        return this->codes_;
+    }
+};
+
+
 } // namespace fuzzyrat
 
 #endif //FUZZYRAT_OPCODE_H

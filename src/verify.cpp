@@ -5,6 +5,7 @@
 #include "verify.h"
 #include "state.h"
 #include "node.h"
+#include "logger.h"
 
 namespace fuzzyrat {
 
@@ -87,6 +88,7 @@ void SymbolVerifier::visit(ZeroOrMoreNode &node) {
 
 
 void verify(GrammarState &state) throw(SemanticError) {
+    LOG_DEBUG("start verification");
     SymbolVerifier().verify(state.map());
 }
 

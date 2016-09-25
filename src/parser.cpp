@@ -38,7 +38,7 @@ void Parser::operator()(GrammarState &state) {
         auto pair = this->parse_production();
         std::string name = this->lexer->toTokenText(pair.first);
 
-        if(state.startSymbol().empty() && isNonTerminal(name)) {
+        if(state.startSymbol().empty()) {
             state.setStartSymbol(name);
         }
 

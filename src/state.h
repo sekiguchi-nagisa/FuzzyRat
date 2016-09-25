@@ -14,7 +14,6 @@
 namespace fuzzyrat {
 
 class Node;
-class OpCode;
 
 using ProductionMap = std::unordered_map<std::string, std::unique_ptr<Node>>;
 
@@ -56,34 +55,6 @@ public:
 
     const ProductionMap &map() const {
         return this->map_;
-    }
-};
-
-class ExecState {
-private:
-    /**
-     * indicate start production id
-     */
-    unsigned int statrtId_;
-
-    std::vector<std::shared_ptr<OpCode>> codes_;
-
-public:
-    NON_COPYABLE(ExecState);
-
-    ExecState() : statrtId_(0), codes_() {}
-    ~ExecState() = default;
-
-    unsigned int startId() const {
-        return this->statrtId_;
-    }
-
-    void setStartId(unsigned int id) {
-        this->statrtId_ = id;
-    }
-
-    std::vector<std::shared_ptr<OpCode>> &codes() {
-        return this->codes_;
     }
 };
 

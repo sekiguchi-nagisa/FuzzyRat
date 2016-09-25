@@ -13,12 +13,12 @@ namespace fuzzyrat {
 // ##     Compiler     ##
 // ######################
 
-void Compiler::visit(AnyNode &node) {   //FIXME: unicode
+void Compiler::visit(AnyNode &) {   //FIXME: unicode
     this->generate<AnyOp>();
 }
 
-void Compiler::visit(CharSetNode &node) {   //FIXME: unicode
-    //FIXME:
+void Compiler::visit(CharSetNode &) {   //FIXME: unicode
+    fatal("unimplemented\n");
 }
 
 void Compiler::visit(StringNode &node) {    //FIXME: unicode
@@ -58,7 +58,8 @@ void Compiler::visit(TerminalNode &node) {
     this->generate<CallOp>(this->getProductionId(node.name()));
 }
 
-void Compiler::operator()(const GrammarState &state, ExecState &estate) {
+CompiledUnit Compiler::operator()(const GrammarState &state) {
+    CompiledUnit estate;
     this->estate = &estate;
 
     // register production name to name map
@@ -72,6 +73,8 @@ void Compiler::operator()(const GrammarState &state, ExecState &estate) {
 
     unsigned int startId = this->getProductionId(state.startSymbol());
     estate.setStartId(startId);
+
+    return estate;
 }
 
 void Compiler::append(OpCodePtr &&code) {
@@ -124,13 +127,18 @@ void Compiler::generateAlternative(Node *leftNode, Node *rightNode) {
         values.push_back(this->extract());
     }
 
-    cur->setNext(std::make_shared<AltOp>(std::move(values)));
+    auto next = std::make_shared<AltOp>(std::move(values));
+    if(cur) {
+        cur->setNext(std::move(next));
+    } else {
+        cur = std::move(next);
+    }
     this->head = std::move(cur);
     this->tail = std::move(empty);
 }
 
-void Compiler::generateRepeat(Node &exprNode) {
-
+void Compiler::generateRepeat(Node &) {
+    fatal("unimplemented\n");
 }
 
 unsigned int Compiler::generateProduction(const std::string &name, Node &node) {

@@ -30,8 +30,6 @@ static const argv::Option<OptionKind> options[] = {
 };
 
 int main(int argc, char **argv) {
-    std::cout << "Hello, World!" << std::endl;
-
     argv::CmdLines<OptionKind> cmdLines;
     int index;
     try {
@@ -106,9 +104,7 @@ int main(int argc, char **argv) {
                           << state.lexer().formatLineMarker(lineToken, e.token()));
     }
 
-    ExecState estate;
-    Compiler()(state, estate);
-    
+    CompiledUnit unit = Compiler()(state);
 
     exit(0);
 }

@@ -20,7 +20,7 @@ private:
     unsigned int idCount;
     std::unordered_map<std::string, unsigned int> name2IdMap;
 
-    ExecState *estate;
+    CompiledUnit *estate;
 
 public:
     Compiler() : head(nullptr), tail(nullptr), idCount(0), name2IdMap(), estate(nullptr) {}
@@ -30,7 +30,7 @@ public:
     EACH_NODE_KIND(GEN_VISIT)
 #undef GEN_VISIT
 
-    void operator()(const GrammarState &state, ExecState &estate);
+    CompiledUnit operator()(const GrammarState &state);
 
 private:
     void append(OpCodePtr &&code);
