@@ -105,6 +105,8 @@ int main(int argc, char **argv) {
     }
 
     CompiledUnit unit = Compiler()(state);
-
+    auto buf = eval(unit);
+    buf += '\0';
+    std::cout << buf.get() << std::endl;
     exit(0);
 }

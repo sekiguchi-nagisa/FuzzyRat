@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "misc/noncopyable.h"
+#include "misc/buffer.hpp"
 
 namespace fuzzyrat {
 
@@ -159,6 +160,8 @@ public:
         return this->codes_;
     }
 };
+
+ydsh::ByteBuffer eval(CompiledUnit &unit);
 
 
 } // namespace fuzzyrat

@@ -192,7 +192,7 @@ NodePtr Parser::parse_regexSeq() {
     switch(this->curKind) {
 #define GEN_CASE(E) case E:
     EACH_LA_regexPrimary(GEN_CASE) {
-        auto rightNode = this->parse_regexSuffix();
+        auto rightNode = this->parse_regexSeq();
         leftNode = unique<SequenceNode>(std::move(leftNode), std::move(rightNode));
         break;
     }
