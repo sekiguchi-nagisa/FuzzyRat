@@ -31,12 +31,23 @@ void Compiler::visit(ZeroOrMoreNode &node) {
     this->generateRepeat(*node.exprNode());
 }
 
+/**
+ *
+ * @param node
+ *
+ * A+ => A A*
+ */
 void Compiler::visit(OneOrMoreNode &node) {
     node.exprNode()->accept(*this);
     this->generateRepeat(*node.exprNode());
 }
 
-
+/**
+ *
+ * @param node
+ *
+ * A? => | A
+ */
 void Compiler::visit(OptionNode &node) {
     this->generateAlternative(nullptr, node.exprNode().get());
 }
@@ -59,8 +70,6 @@ void Compiler::visit(TerminalNode &node) {
 }
 
 CompiledUnit Compiler::operator()(const GrammarState &state) {
-    CompiledUnit estate;
-    this->estate = &estate;
 
     // register production name to name map
     for(auto &e : state.map()) {
@@ -71,10 +80,13 @@ CompiledUnit Compiler::operator()(const GrammarState &state) {
         this->generateProduction(e.first, *e.second);
     }
 
+    // generate compiled unit
     unsigned int startId = this->getProductionId(state.startSymbol());
-    estate.setStartId(startId);
-
-    return estate;
+    std::vector<OpCodePtr> codes(this->codePairs.size());
+    for(auto &e : this->codePairs) {
+        codes[e.second] = std::move(e.first);
+    }
+    return CompiledUnit(startId, std::move(codes));
 }
 
 void Compiler::append(OpCodePtr &&code) {
@@ -137,8 +149,32 @@ void Compiler::generateAlternative(Node *leftNode, Node *rightNode) {
     this->tail = std::move(empty);
 }
 
-void Compiler::generateRepeat(Node &) {
-    fatal("unimplemented\n");
+/**
+ *
+ * @param node
+ *
+ * A* => A'
+ *       A' = | A A'
+ *    => A' = (A A')?
+ *
+ */
+void Compiler::generateRepeat(Node &node) {
+    std::string name;
+    name += std::to_string(this->idCount);
+    name += "_repeat";
+
+    // generate production
+    this->registerProductionName(name);
+    Token dummy = {0, 0};
+    auto seqNode = unique<SequenceNode>(std::unique_ptr<Node>(&node),
+                                        unique<NonTerminalNode>(dummy, std::string(name)));
+    auto optNode = unique<OptionNode>(std::move(seqNode), dummy);
+    this->generateProduction(name, *optNode);
+
+    // clear altNode due to prevent double free
+    static_cast<SequenceNode *>(optNode->exprNode().get())->leftNode().release();
+
+    NonTerminalNode(dummy, std::move(name)).accept(*this);
 }
 
 unsigned int Compiler::generateProduction(const std::string &name, Node &node) {
@@ -147,9 +183,7 @@ unsigned int Compiler::generateProduction(const std::string &name, Node &node) {
     this->generate<RetOp>();
 
     auto code = this->extract();
-    assert(id == this->estate->codes().size());
-    this->estate->codes().push_back(std::move(code));
-
+    this->codePairs.push_back(std::make_pair(std::move(code), id));
     return id;
 }
 

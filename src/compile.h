@@ -19,11 +19,10 @@ private:
 
     unsigned int idCount;
     std::unordered_map<std::string, unsigned int> name2IdMap;
-
-    CompiledUnit *estate;
+    std::vector<std::pair<OpCodePtr, unsigned int>> codePairs;
 
 public:
-    Compiler() : head(nullptr), tail(nullptr), idCount(0), name2IdMap(), estate(nullptr) {}
+    Compiler() : head(nullptr), tail(nullptr), idCount(0), name2IdMap(), codePairs() {}
     ~Compiler() = default;
 
 #define GEN_VISIT(E) void visit(E ## Node &node) override;

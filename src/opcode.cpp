@@ -73,8 +73,24 @@ static OpCode *evalRet(RetOp *, EvalState &st) {
     return next;
 }
 
+#if 0
+
+static const char *toString(OpKind kind) {
+    const char *v[] = {
+#define GEN_STR(E) #E,
+            EACH_OP_KIND(GEN_STR)
+#undef GEN_STR
+    };
+    return v[static_cast<unsigned int>(kind)];
+}
+
+#define PRINT_OP(OP) fprintf(stderr, "op: %s\n", toString(OP))
+#else
+#define PRINT_OP(OP)
+#endif
+
 static OpCode *eval(OpCode *code, EvalState &st) {
-#define GEN_CASE(E) case OpKind::E: return eval ## E (static_cast<E ## Op *>(code), st);
+#define GEN_CASE(E) case OpKind::E: PRINT_OP(OpKind::E); return eval ## E (static_cast<E ## Op *>(code), st);
     switch(code->kind()) {
     EACH_OP_KIND(GEN_CASE)
     }

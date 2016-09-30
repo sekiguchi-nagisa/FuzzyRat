@@ -132,7 +132,9 @@ private:
 public:
     NON_COPYABLE(CompiledUnit);
 
-    CompiledUnit() : statrtId_(0), codes_() {}
+    CompiledUnit(unsigned int startId, std::vector<OpCodePtr> &&codes) :
+            statrtId_(startId), codes_(std::move(codes)) {}
+
     CompiledUnit(CompiledUnit &&s) : statrtId_(s.statrtId_), codes_(std::move(s.codes_)) {}
 
     ~CompiledUnit() = default;
@@ -150,10 +152,6 @@ public:
 
     unsigned int startId() const {
         return this->statrtId_;
-    }
-
-    void setStartId(unsigned int id) {
-        this->statrtId_ = id;
     }
 
     std::vector<std::shared_ptr<OpCode>> &codes() {
