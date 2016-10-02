@@ -84,7 +84,7 @@ NodePtr Parser::parse_alternative() {
     if(this->curKind == ALT) {
         this->expect(ALT);
         auto rightNode = this->parse_alternative();
-        leftNode = unique<AlternativeNode>(std::move(leftNode), std::move(rightNode));
+        leftNode = shared<AlternativeNode>(std::move(leftNode), std::move(rightNode));
     }
     return leftNode;
 }
@@ -97,7 +97,7 @@ NodePtr Parser::parse_sequence() {
 #define GEN_CASE(E) case E:
     EACH_LA_primary(GEN_CASE) {
         auto rightNode = this->parse_sequence();
-        leftNode = unique<SequenceNode>(std::move(leftNode), std::move(rightNode));
+        leftNode = shared<SequenceNode>(std::move(leftNode), std::move(rightNode));
         break;
     }
 #undef GEN_CASE
@@ -114,13 +114,13 @@ NodePtr Parser::parse_suffix() {
     for(bool next = true; next;) {
         switch(this->curKind) {
         case ZERO:
-            node = unique<ZeroOrMoreNode>(std::move(node), this->expect(ZERO));
+            node = shared<ZeroOrMoreNode>(std::move(node), this->expect(ZERO));
             break;
         case ONE:
-            node = unique<OneOrMoreNode>(std::move(node), this->expect(ONE));
+            node = shared<OneOrMoreNode>(std::move(node), this->expect(ONE));
             break;
         case OPT:
-            node = unique<OptionNode>(std::move(node), this->expect(OPT));
+            node = shared<OptionNode>(std::move(node), this->expect(OPT));
             break;
         default:
             next = false;
@@ -141,16 +141,14 @@ NodePtr Parser::parse_primary() {
         return node;
     }
     case TERM: {
-        Token token = this->expect(TERM);
-        return unique<TerminalNode>(token, this->lexer->toTokenText(token));
-    }
-    case NTERM: {
-        Token token = this->expect(NTERM);
-        return unique<NonTerminalNode>(token, this->lexer->toTokenText(token));
+    case NTERM:
+        Token token = this->curToken;
+        this->consume();
+        return shared<NonTerminalNode>(token, this->lexer->toTokenText(token));
     }
     case STRING: {
         Token token = this->expect(STRING);
-        return unique<StringNode>(token, this->lexer->toTokenText(token));  //FIXME: unquote
+        return shared<StringNode>(token, this->lexer->toTokenText(token));  //FIXME: unquote
     }
     default:
         TokenKind kinds[] = {
@@ -180,7 +178,7 @@ NodePtr Parser::parse_regexAlt() {
     if(this->curKind == ALT) {
         this->expect(ALT);
         auto rightNode = this->parse_regexAlt();
-        leftNode = unique<AlternativeNode>(std::move(leftNode), std::move(rightNode));
+        leftNode = shared<AlternativeNode>(std::move(leftNode), std::move(rightNode));
     }
     return leftNode;
 }
@@ -193,7 +191,7 @@ NodePtr Parser::parse_regexSeq() {
 #define GEN_CASE(E) case E:
     EACH_LA_regexPrimary(GEN_CASE) {
         auto rightNode = this->parse_regexSeq();
-        leftNode = unique<SequenceNode>(std::move(leftNode), std::move(rightNode));
+        leftNode = shared<SequenceNode>(std::move(leftNode), std::move(rightNode));
         break;
     }
 #undef GEN_CASE
@@ -210,13 +208,13 @@ NodePtr Parser::parse_regexSuffix() {
     for(bool next = true; next;) {
         switch(this->curKind) {
         case ZERO:
-            node = unique<ZeroOrMoreNode>(std::move(node), this->expect(ZERO));
+            node = shared<ZeroOrMoreNode>(std::move(node), this->expect(ZERO));
             break;
         case ONE:
-            node = unique<OneOrMoreNode>(std::move(node), this->expect(ONE));
+            node = shared<OneOrMoreNode>(std::move(node), this->expect(ONE));
             break;
         case OPT:
-            node = unique<OptionNode>(std::move(node), this->expect(OPT));
+            node = shared<OptionNode>(std::move(node), this->expect(OPT));
             break;
         default:
             next = false;
@@ -238,17 +236,17 @@ NodePtr Parser::parse_regexPrimary() {
     }
     case TERM: {
         Token token = this->expect(TERM);
-        return unique<TerminalNode>(token, this->lexer->toTokenText(token));
+        return shared<NonTerminalNode>(token, this->lexer->toTokenText(token));
     }
     case DOT:
-        return unique<AnyNode>(this->expect(DOT));
+        return shared<AnyNode>(this->expect(DOT));
     case CHARSET: {
         Token token = this->expect(CHARSET);
-        return unique<CharSetNode>(token, this->lexer->toTokenText(token));
+        return shared<CharSetNode>(token, this->lexer->toTokenText(token));
     }
     case STRING: {
         Token token = this->expect(STRING);
-        return unique<StringNode>(token, this->lexer->toTokenText(token));
+        return shared<StringNode>(token, this->lexer->toTokenText(token));
     }
     default:
         TokenKind kinds[] = {

@@ -13,6 +13,8 @@ class GrammarState;
 
 void verify(GrammarState &state) throw(SemanticError);
 
+void desugar(GrammarState &state);
+
 } // namespace fuzzyrat
 
 #endif //FUZZYRAT_VERIFY_H

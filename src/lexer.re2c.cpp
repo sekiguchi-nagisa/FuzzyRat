@@ -43,11 +43,13 @@ TokenKind Lexer::nextToken(Token &token) {
       re2c:indent:top = 1;
       re2c:indent:string = "    ";
 
+      HEX        = '\\' [x] [0-9a-fA-F]{1,2};
+      UNICODE    = '\\' [uU] [0-9a-fA-F]{4};
       TERM       = [_A-Z] [_A-Z0-9]*;
       NTERM      = [a-z] [_a-zA-Z0-9]*;
-      SCHAR      = [^\t\r\n'\\\000] | '\\' [trn'\\] | '\\' [uU] [0-9a-fA-F]{4};
-      DCHAR      = [^\t\r\n"\\\000] | '\\' [trn"\\] | '\\' [uU] [0-9a-fA-F]{4};
-      SETCHAR    = [^\t\r\n\\\]\000] | '\\' [trn\\\]] | '\\-' | '\\' [uU] [0-9a-fA-F]{4};
+      SCHAR      = [^\t\r\n'\\\000] | '\\' [trn'\\] | HEX;
+      DCHAR      = [^\t\r\n"\\\000] | '\\' [trn"\\] | HEX;
+      SETCHAR    = [^\t\r\n\\\]\000] | '\\' [trn\\\]] | '\\-' | HEX;
       COMMENT    = "//" [^\r\n\000]*;
      */
 

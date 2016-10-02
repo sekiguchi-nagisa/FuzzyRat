@@ -10,6 +10,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "misc/resource.hpp"
 #include "lexer.h"
 
 namespace fuzzyrat {
@@ -17,6 +18,7 @@ namespace fuzzyrat {
 struct NodeVisitor;
 
 #define EACH_NODE_KIND(E) \
+    E(Empty) \
     E(Any) \
     E(String) \
     E(CharSet) \
@@ -25,7 +27,6 @@ struct NodeVisitor;
     E(Option) \
     E(Sequence) \
     E(Alternative) \
-    E(Terminal) \
     E(NonTerminal)
 
 
@@ -58,9 +59,12 @@ class Node : public SourceInfo {
 protected:
     const NodeKind kind_;
 
-    Node(NodeKind kind, Token token) : SourceInfo(token), kind_(kind) {}
+private:
+    unsigned int refcount_;
 
 public:
+    Node(NodeKind kind, Token token) : SourceInfo(token), kind_(kind), refcount_(0) {}
+
     virtual ~Node() = default;
 
     NodeKind kind() const {
@@ -72,15 +76,35 @@ public:
     }
 
     void accept(NodeVisitor &visitor);
+
+    friend void intrusivePtr_addRef(Node *ptr) {
+        if(ptr != nullptr) {
+            ptr->refcount_++;
+        }
+    }
+
+    friend void intrusivePtr_release(Node *ptr) {
+        if(ptr != nullptr && --ptr->refcount_ == 0) {
+            delete ptr;
+        }
+    }
 };
 
-using NodePtr = std::unique_ptr<Node>;
+template <typename T>
+using SharedPtr = ydsh::IntrusivePtr<T>;
+
+using NodePtr = SharedPtr<Node>;
 
 template <typename T, typename ...Arg>
-std::unique_ptr<T> unique(Arg && ... arg) {
-    return std::unique_ptr<T>(new T(std::forward<Arg>(arg)...));
-};
+NodePtr shared(Arg &&... arg) {
+    return NodePtr(new T(std::forward<Arg>(arg)...));
+}
 
+class EmptyNode : public Node {
+public:
+    EmptyNode() : Node(NodeKind::Empty, {0, 0}) {}
+    ~EmptyNode() = default;
+};
 
 class AnyNode : public Node {
 public:
@@ -211,21 +235,6 @@ public:
     }
 };
 
-class TerminalNode : public Node {
-private:
-    std::string name_;
-
-public:
-    TerminalNode(Token token, std::string &&name) :
-            Node(NodeKind::Terminal, token), name_(std::move(name)) {}
-
-    ~TerminalNode() = default;
-
-    const std::string &name() const {
-        return this->name_;
-    }
-};
-
 class NonTerminalNode : public Node {
 private:
     std::string name_;
@@ -243,6 +252,8 @@ public:
 
 bool isTerminal(const std::string &);
 bool isNonTerminal(const std::string &);
+
+int unescapeStr(std::string::const_iterator &iter, std::string::const_iterator end);
 
 using ProductionMap = std::unordered_map<std::string, NodePtr>;
 

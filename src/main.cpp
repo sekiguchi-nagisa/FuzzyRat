@@ -104,6 +104,7 @@ int main(int argc, char **argv) {
                           << state.lexer().formatLineMarker(lineToken, e.token()));
     }
 
+    desugar((state));
     CompiledUnit unit = Compiler()(state);
     auto buf = eval(unit);
     buf += '\0';

@@ -12,7 +12,6 @@ namespace fuzzyrat {
 #define EACH_SEMANTIC_ERROR(E) \
     E(DefinedProduction,    "already defined production") \
     E(UndefinedNonTerminal, "undefined non-terminal") \
-    E(UndefinedTerminal,    "undefined terminal") \
     E(UndefinedStart,       "undefined start production")
 
 class SemanticError {

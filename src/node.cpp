@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "node.h"
+#include "misc/num.h"
 
 namespace fuzzyrat {
 
@@ -36,5 +37,34 @@ bool isNonTerminal(const std::string &name) {
     return !name.empty() && isLowerLetter(name.front());
 }
 
+int unescapeStr(std::string::const_iterator &iter, std::string::const_iterator end) {
+    int code = -1;
+    if(iter != end) {
+        code = *(iter++);
+        if(code == '\\' && iter + 1 != end) {
+            char next = *(iter++);
+            switch(next) {
+            case 't': code = '\t'; break;
+            case 'r': code = '\r'; break;
+            case 'n': code = '\n'; break;
+            case '\\':
+            case '"':
+            case '\'':
+                code = next;
+                break;
+            case 'x':
+                assert(std::distance(end, iter) > 0);
+                assert(ydsh::isHex(*iter));
+                code = ydsh::toHex(*(iter++));
+                if(iter != end && ydsh::isHex(*iter)) {
+                    code *= 16;
+                    code += ydsh::toHex(*(iter++));
+                }
+                break;
+            }
+        }
+    }
+    return code;
+}
 
 } // namespace fuzzyrat

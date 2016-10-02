@@ -13,6 +13,10 @@ namespace fuzzyrat {
 // ##     Compiler     ##
 // ######################
 
+void Compiler::visit(EmptyNode &) {
+    this->generate<EmptyOp>();
+}
+
 void Compiler::visit(AnyNode &) {   //FIXME: unicode
     this->generate<AnyOp>();
 }
@@ -22,34 +26,24 @@ void Compiler::visit(CharSetNode &) {   //FIXME: unicode
 }
 
 void Compiler::visit(StringNode &node) {    //FIXME: unicode
-    for(auto &e : node.value()) {
-        this->generate<CharOp>(e);
+    auto iter = node.value().begin() + 1;
+    auto end = node.value().cend() - 1;
+
+    for(int code; (code = unescapeStr(iter, end)) != -1;) {
+        this->generate<CharOp>(code);
     }
 }
 
-void Compiler::visit(ZeroOrMoreNode &node) {
-    this->generateRepeat(*node.exprNode());
+void Compiler::visit(ZeroOrMoreNode &) {
+    fatal("unsupported\n");
 }
 
-/**
- *
- * @param node
- *
- * A+ => A A*
- */
-void Compiler::visit(OneOrMoreNode &node) {
-    node.exprNode()->accept(*this);
-    this->generateRepeat(*node.exprNode());
+void Compiler::visit(OneOrMoreNode &) {
+    fatal("unsupported\n");
 }
 
-/**
- *
- * @param node
- *
- * A? => | A
- */
-void Compiler::visit(OptionNode &node) {
-    this->generateAlternative(nullptr, node.exprNode().get());
+void Compiler::visit(OptionNode &) {
+    fatal("unsupported\n");
 }
 
 void Compiler::visit(SequenceNode &node) {
@@ -65,27 +59,27 @@ void Compiler::visit(NonTerminalNode &node) {
     this->generate<CallOp>(this->getProductionId(node.name()));
 }
 
-void Compiler::visit(TerminalNode &node) {
-    this->generate<CallOp>(this->getProductionId(node.name()));
-}
-
 CompiledUnit Compiler::operator()(const GrammarState &state) {
 
     // register production name to name map
     for(auto &e : state.map()) {
-        this->registerProductionName(e.first);
+        auto pair = this->name2IdMap.insert(std::make_pair(e.first, this->idCount++));
+        if(!pair.second) {
+            fatal("already found production: %s\n", e.first.c_str());
+        }
     }
 
+    // generate code
+    std::vector<OpCodePtr> codes(state.map().size());
     for(auto &e : state.map()) {
-        this->generateProduction(e.first, *e.second);
+        const unsigned int id = this->getProductionId(e.first);
+        e.second->accept(*this);
+        this->generate<RetOp>();
+        codes[id] = this->extract();
     }
 
     // generate compiled unit
     unsigned int startId = this->getProductionId(state.startSymbol());
-    std::vector<OpCodePtr> codes(this->codePairs.size());
-    for(auto &e : this->codePairs) {
-        codes[e.second] = std::move(e.first);
-    }
     return CompiledUnit(startId, std::move(codes));
 }
 
@@ -147,51 +141,6 @@ void Compiler::generateAlternative(Node *leftNode, Node *rightNode) {
     }
     this->head = std::move(cur);
     this->tail = std::move(empty);
-}
-
-/**
- *
- * @param node
- *
- * A* => A'
- *       A' = | A A'
- *    => A' = (A A')?
- *
- */
-void Compiler::generateRepeat(Node &node) {
-    std::string name;
-    name += std::to_string(this->idCount);
-    name += "_repeat";
-
-    // generate production
-    this->registerProductionName(name);
-    Token dummy = {0, 0};
-    auto seqNode = unique<SequenceNode>(std::unique_ptr<Node>(&node),
-                                        unique<NonTerminalNode>(dummy, std::string(name)));
-    auto optNode = unique<OptionNode>(std::move(seqNode), dummy);
-    this->generateProduction(name, *optNode);
-
-    // clear altNode due to prevent double free
-    static_cast<SequenceNode *>(optNode->exprNode().get())->leftNode().release();
-
-    NonTerminalNode(dummy, std::move(name)).accept(*this);
-}
-
-unsigned int Compiler::generateProduction(const std::string &name, Node &node) {
-    const unsigned int id = this->getProductionId(name);
-    node.accept(*this);
-    this->generate<RetOp>();
-
-    auto code = this->extract();
-    this->codePairs.push_back(std::make_pair(std::move(code), id));
-    return id;
-}
-
-void Compiler::registerProductionName(const std::string &name) {
-    auto pair = this->name2IdMap.insert(std::make_pair(name, this->idCount++));
-    if(!pair.second) {
-        fatal("already found production: %s\n", name.c_str());
-    }
 }
 
 unsigned int Compiler::getProductionId(const std::string &name) {

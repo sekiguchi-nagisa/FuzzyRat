@@ -19,10 +19,9 @@ private:
 
     unsigned int idCount;
     std::unordered_map<std::string, unsigned int> name2IdMap;
-    std::vector<std::pair<OpCodePtr, unsigned int>> codePairs;
 
 public:
-    Compiler() : head(nullptr), tail(nullptr), idCount(0), name2IdMap(), codePairs() {}
+    Compiler() : head(nullptr), tail(nullptr), idCount(0), name2IdMap() {}
     ~Compiler() = default;
 
 #define GEN_VISIT(E) void visit(E ## Node &node) override;
@@ -45,12 +44,6 @@ private:
     }
 
     void generateAlternative(Node *leftNode, Node *rightNode);
-
-    void generateRepeat(Node &exprNode);
-
-    unsigned int generateProduction(const std::string &name, Node &node);
-
-    void registerProductionName(const std::string &name);
 
     unsigned int getProductionId(const std::string &name);
 };

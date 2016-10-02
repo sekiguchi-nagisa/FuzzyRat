@@ -10,12 +10,13 @@
 #include <memory>
 
 #include "lexer.h"
+#include "misc/resource.hpp"
 
 namespace fuzzyrat {
 
 class Node;
 
-using ProductionMap = std::unordered_map<std::string, std::unique_ptr<Node>>;
+using ProductionMap = std::unordered_map<std::string, ydsh::IntrusivePtr<Node>>;
 
 class GrammarState {
 private:
