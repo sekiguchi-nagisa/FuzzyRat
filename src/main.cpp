@@ -91,11 +91,12 @@ int main(int argc, char **argv) {
 
         verify(state);
     } catch(const ParseError &e) {
-        Token lineToken = state.lexer().getLineToken(e.getErrorToken());
-        LOG_ERROR(formatSourceName(state.lexer(), e.getErrorToken())
+        Token errorToken = state.lexer().shiftEOS(e.getErrorToken());
+        Token lineToken = state.lexer().getLineToken(errorToken);
+        LOG_ERROR(formatSourceName(state.lexer(), errorToken)
                           << " " << e.getMessage() << std::endl
                           << state.lexer().toTokenText(lineToken) << std::endl
-                          << state.lexer().formatLineMarker(lineToken, e.getErrorToken()));
+                          << state.lexer().formatLineMarker(lineToken, errorToken));
     } catch(const SemanticError &e) {
         Token lineToken = state.lexer().getLineToken(e.token());
         LOG_ERROR(formatSourceName(state.lexer(), e.token())
@@ -104,7 +105,7 @@ int main(int argc, char **argv) {
                           << state.lexer().formatLineMarker(lineToken, e.token()));
     }
 
-    desugar((state));
+    desugar(state);
     CompiledUnit unit = Compiler()(state);
     auto buf = eval(unit);
     buf += '\0';
