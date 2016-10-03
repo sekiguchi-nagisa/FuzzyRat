@@ -43,7 +43,7 @@ private:
         this->append(std::make_shared<T>(std::forward<Arg>(arg)...));
     }
 
-    void generateAlternative(Node *leftNode, Node *rightNode);
+    void generateAlternative(Node &leftNode, Node &rightNode);
 
     unsigned int getProductionId(const std::string &name);
 };

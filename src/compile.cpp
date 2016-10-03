@@ -52,7 +52,7 @@ void Compiler::visit(SequenceNode &node) {
 }
 
 void Compiler::visit(AlternativeNode &node) {
-    this->generateAlternative(node.leftNode().get(), node.rightNode().get());
+    this->generateAlternative(*node.leftNode(), *node.rightNode());
 }
 
 void Compiler::visit(NonTerminalNode &node) {
@@ -95,42 +95,39 @@ void Compiler::append(OpCodePtr &&code) {
 
 static void fillFlattenView(std::vector<Node *> &values, bool &hasEmpty, std::array<Node *, 2> &&nodes) {
     for(auto *node : nodes) {
-        if(node == nullptr) {
-            hasEmpty = true;
-        } else if (node->is(NodeKind::Alternative)){
+        if (node->is(NodeKind::Alternative)) {
             auto *altNode = static_cast<AlternativeNode *>(node);
             fillFlattenView(values, hasEmpty, {{altNode->leftNode().get(), altNode->rightNode().get()}});
-        } else if(node->is(NodeKind::Option)) {
-            fillFlattenView(values, hasEmpty, {{nullptr, static_cast<OptionNode *>(node)->exprNode().get()}});
+        } else if(node->is(NodeKind::Empty)) {
+            if(!hasEmpty) {
+                hasEmpty = true;
+                values.push_back(node);
+            }
         } else {
             values.push_back(node);
         }
     }
 }
 
-static std::vector<Node *> getFlattenView(Node *leftNode, Node *rightNode) {
+static std::vector<Node *> getFlattenView(Node &leftNode, Node &rightNode) {
     std::vector<Node *> values;
     bool hasEmpty = false;
-    fillFlattenView(values, hasEmpty, {{leftNode, rightNode}});
-    if(hasEmpty) {
-        values.push_back(nullptr);
-    }
+    fillFlattenView(values, hasEmpty, {{&leftNode, &rightNode}});
     return values;
 }
 
-void Compiler::generateAlternative(Node *leftNode, Node *rightNode) {
+void Compiler::generateAlternative(Node &leftNode, Node &rightNode) {
     auto cur = this->extract();
-    std::vector<OpCodePtr> values;
 
     auto empty = std::make_shared<EmptyOp>();
-    for(auto &e : getFlattenView(leftNode, rightNode)) {
-        if(e != nullptr) {
-            e->accept(*this);
-        } else {
-            this->generate<EmptyOp>();
-        }
+    auto view = getFlattenView(leftNode, rightNode);
+    const unsigned int size = view.size();
+
+    std::vector<OpCodePtr> values(view.size());
+    for(unsigned int i = 0; i < size; i++) {
+        view[i]->accept(*this);
         this->tail->setNext(empty);
-        values.push_back(this->extract());
+        values[i] = this->extract();
     }
 
     auto next = std::make_shared<AltOp>(std::move(values));
