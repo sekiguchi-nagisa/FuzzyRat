@@ -253,8 +253,6 @@ public:
 bool isTerminal(const std::string &);
 bool isNonTerminal(const std::string &);
 
-int unescapeStr(std::string::const_iterator &iter, std::string::const_iterator end);
-
 using ProductionMap = std::unordered_map<std::string, NodePtr>;
 
 struct NodeVisitor {

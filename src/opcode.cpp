@@ -41,13 +41,19 @@ static OpCode *evalEmpty(EmptyOp *code, EvalState &) {
 }
 
 static OpCode *evalAny(AnyOp *code, EvalState &st) {    //FIXME: control character
-    char ch = std::uniform_int_distribution<char>(32, 126)(st.randomEngine);
+    char ch = std::uniform_int_distribution<unsigned int>(32, 126)(st.randomEngine);
     st.buffer += ch;
     return code->next().get();
 }
 
 static OpCode *evalChar(CharOp *code, EvalState &st) {
     st.buffer += code->code();
+    return code->next().get();
+}
+
+static OpCode *evalCharSet(CharSetOp *code, EvalState &st) {
+    unsigned int index = std::uniform_int_distribution<unsigned int>(0, code->map().population() - 1)(st.randomEngine);
+    st.buffer += code->map().lookup(index);
     return code->next().get();
 }
 

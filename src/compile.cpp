@@ -5,6 +5,7 @@
 #include <array>
 
 #include "misc/fatal.h"
+#include "misc/num.h"
 #include "compile.h"
 
 namespace fuzzyrat {
@@ -21,15 +22,96 @@ void Compiler::visit(AnyNode &) {   //FIXME: unicode
     this->generate<AnyOp>();
 }
 
-void Compiler::visit(CharSetNode &) {   //FIXME: unicode
-    fatal("unimplemented\n");
+static int parseHex(std::string::const_iterator &iter, std::string::const_iterator end) {
+    assert(std::distance(end, iter) > 0);
+    assert(ydsh::isHex(*iter));
+    int code = ydsh::toHex(*(iter++));
+    if(iter != end && ydsh::isHex(*iter)) {
+        code *= 16;
+        code += ydsh::toHex(*(iter++));
+    }
+    return code;
+}
+
+static int parseCharSet(std::string::const_iterator &iter, std::string::const_iterator end) {
+    int code = -1;
+    if(iter != end) {
+        code = *(iter++);
+        if(code == '\\' && iter != end) {
+            char next = *(iter++);
+            switch(next) {
+            case 't': code = '\t'; break;
+            case 'r': code = '\r'; break;
+            case 'n': code = '\n'; break;
+            case '\\':
+            case ']':
+                code = next;
+                break;
+            case 'x':
+                code = parseHex(iter, end);
+                break;
+            }
+        }
+    }
+    return code;
+}
+
+static void setRange(char start, char stop, AsciiMap &map) {
+    char begin = start < stop ? start : stop;
+    char end = start < stop ? stop : start;
+    for(; begin <= end; begin++) {
+        map |= begin;
+    }
+}
+
+void Compiler::visit(CharSetNode &node) {   //FIXME: unicode
+    AsciiMap map;
+
+    auto iter = node.value().cbegin() + 1;
+    const auto end = node.value().cend() - 1;
+    while(iter != end) {
+        int code = parseCharSet(iter, end);
+        if(iter != end && *iter == '-' && iter + 1 != end) {
+            iter++;
+            int next = parseCharSet(iter, end);
+            setRange(code, next, map);
+        } else {
+            map |= code;
+        }
+    }
+
+    this->generate<CharSetOp>(std::move(map));
+}
+
+static int parseStr(std::string::const_iterator &iter, std::string::const_iterator end) {
+    int code = -1;
+    if(iter != end) {
+        code = *(iter++);
+        if(code == '\\' && iter != end) {
+            char next = *(iter++);
+            switch(next) {
+            case 't': code = '\t'; break;
+            case 'r': code = '\r'; break;
+            case 'n': code = '\n'; break;
+            case '\\':
+            case '"':
+            case '\'':
+                code = next;
+                break;
+            case 'x':
+                code = parseHex(iter, end);
+                break;
+            }
+        }
+    }
+    return code;
 }
 
 void Compiler::visit(StringNode &node) {    //FIXME: unicode
-    auto iter = node.value().begin() + 1;
+    auto iter = node.value().cbegin() + 1;
     auto end = node.value().cend() - 1;
 
-    for(int code; (code = unescapeStr(iter, end)) != -1;) {
+    for(int code; (code = parseStr(iter, end)) != -1;) {
         this->generate<CharOp>(code);
     }
 }

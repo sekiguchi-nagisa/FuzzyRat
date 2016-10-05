@@ -49,7 +49,7 @@ TokenKind Lexer::nextToken(Token &token) {
       NTERM      = [a-z] [_a-zA-Z0-9]*;
       SCHAR      = [^\t\r\n'\\\000] | '\\' [trn'\\] | HEX;
       DCHAR      = [^\t\r\n"\\\000] | '\\' [trn"\\] | HEX;
-      SETCHAR    = [^\t\r\n\\\]\000] | '\\' [trn\\\]] | '\\-' | HEX;
+      SETCHAR    = [^\t\r\n\\\]\000] | '\\' [trn\\\]] | HEX;
       COMMENT    = "//" [^\r\n\000]*;
      */
 

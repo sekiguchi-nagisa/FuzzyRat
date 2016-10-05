@@ -17,6 +17,7 @@ namespace fuzzyrat {
     E(Empty) \
     E(Any) \
     E(Char) \
+    E(CharSet) \
     E(Alt) \
     E(Call) \
     E(Ret)
@@ -87,7 +88,78 @@ public:
     }
 };
 
-//FIXME: charset
+class AsciiMap {
+private:
+    std::uint64_t map_[2];
+    unsigned int population_;
+
+    AsciiMap(std::uint64_t upper, std::uint64_t lower, unsigned int population) :
+            map_{upper, lower}, population_(population) { }
+
+public:
+    AsciiMap() : map_{0, 0}, population_(0) { }
+
+    AsciiMap &operator|=(char ch) {
+        if(!this->contains(ch)) {
+            this->population_++;
+        }
+
+        if(ch >= 0 && ch < 64) {
+            this->map_[0] |= (1L << ch);
+        } else if(ch >= 64) {
+            this->map_[1] |= (1L << (ch - 64));
+        } else {
+            throw std::logic_error("must be ascii character");
+        }
+        return *this;
+    }
+
+    AsciiMap operator~() const {
+        return AsciiMap(~this->map_[0], ~this->map_[1], 128 - this->population_);
+    }
+
+    bool contains(char ch) const {
+        return ch < 0 ? false :
+               ch < 64 ? this->map_[0] & (1L << ch) :
+               this->map_[1] & (1L << (ch - 64));
+    }
+
+    unsigned int population() const {
+        return this->population_;
+    }
+
+    char lookup(unsigned int count) const {
+        unsigned int bitCount = 0;
+
+        // search lower bit
+        for(unsigned int i = 0; i < 64; i++) {
+            if(this->map_[0] & (1L << i) && bitCount++ == count) {
+                return i;
+            }
+        }
+
+        // search upper bit
+        for(unsigned int i = 64; i < 128; i++) {
+            if(this->map_[1] & (1L << (i - 64)) && bitCount++ == count) {
+                return i;
+            }
+        }
+        return -1;
+    }
+};
+
+class CharSetOp : public OpCode {
+private:
+    AsciiMap map_;
+
+public:
+    CharSetOp(AsciiMap &&map) : OpCode(OpKind::CharSet), map_(std::move(map)) {}
+    ~CharSetOp() = default;
+
+    const AsciiMap &map() const {
+        return this->map_;
+    }
+};
 
 class AltOp : public OpCode {
 private:
