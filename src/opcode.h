@@ -226,12 +226,12 @@ public:
         return this->statrtId_;
     }
 
-    std::vector<std::shared_ptr<OpCode>> &codes() {
+    const std::vector<std::shared_ptr<OpCode>> &codes() const {
         return this->codes_;
     }
 };
 
-ydsh::ByteBuffer eval(CompiledUnit &unit);
+ydsh::ByteBuffer eval(const CompiledUnit &unit);
 
 
 } // namespace fuzzyrat

@@ -1,21 +1,15 @@
 #include <iostream>
 
 #include "misc/argv.hpp"
-#include "misc/fatal.h"
+#include <fuzzyrat.h>
 
-#include "logger.h"
-#include "parser.h"
-#include "error.h"
-#include "verify.h"
-#include "compile.h"
-
-using namespace fuzzyrat;
 using namespace ydsh;
 
 #define EACH_OPT(OP) \
     OP(HELP,  "--help", 0,             "show this help message") \
     OP(HELP2, "-h",     0,             "equivalent to '-h'") \
-    OP(START, "-s",     argv::HAS_ARG, "specify start production")
+    OP(START, "-s",     argv::HAS_ARG, "specify start production") \
+    OP(COUNT, "-c",     argv::HAS_ARG, "specify generation times")
 
 enum OptionKind {
 #define GEN_ENUM(E, S, A, M) E,
@@ -42,6 +36,7 @@ int main(int argc, char **argv) {
 
     const char *startSymbol = nullptr;
     const char *fileName = nullptr;
+    unsigned int count = 1;
 
     for(auto &cmdline : cmdLines) {
         switch(cmdline.first) {
@@ -51,6 +46,9 @@ int main(int argc, char **argv) {
             exit(0);
         case START:
             startSymbol = cmdline.second;
+            break;
+        case COUNT:
+            count = std::stoi(std::string(cmdline.second));
             break;
         }
     }
@@ -70,45 +68,21 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    GrammarState state(fileName, fp);
-    if(startSymbol != nullptr) {
-        state.setStartSymbol(startSymbol);
+
+    auto *input = FuzzyRat_newContext(fileName, fp);
+    FuzzyRat_setStartProduction(input, startSymbol);
+    auto code = FuzzyRat_compile(input);
+
+    for(unsigned int i = 0; i < count; i++) {
+        FuzzyRatResult result;
+        FuzzyRat_exec(code, &result);
+        fwrite(result.data, sizeof(char), result.size, stdout);
+        fputc('\n', stdout);
+        fflush(stdout);
+        FuzzyRat_releaseResult(&result);
     }
 
-    try {
-        Parser()(state);
-
-        // check start production
-        if(state.startSymbol().empty()) {
-            LOG_ERROR("start production not found");
-        }
-
-        if(state.map().find(state.startSymbol()) != state.map().end()) {
-            LOG_INFO("start production: " << state.startSymbol());
-        } else {
-            LOG_ERROR("undefined start production: " << state.startSymbol());
-        }
-
-        verify(state);
-    } catch(const ParseError &e) {
-        Token errorToken = state.lexer().shiftEOS(e.getErrorToken());
-        Token lineToken = state.lexer().getLineToken(errorToken);
-        LOG_ERROR(formatSourceName(state.lexer(), errorToken)
-                          << " " << e.getMessage() << std::endl
-                          << state.lexer().toTokenText(lineToken) << std::endl
-                          << state.lexer().formatLineMarker(lineToken, errorToken));
-    } catch(const SemanticError &e) {
-        Token lineToken = state.lexer().getLineToken(e.token());
-        LOG_ERROR(formatSourceName(state.lexer(), e.token())
-                          << " " << toString(e.kind()) << std::endl
-                          << state.lexer().toTokenText(lineToken) << std::endl
-                          << state.lexer().formatLineMarker(lineToken, e.token()));
-    }
-
-    desugar(state);
-    CompiledUnit unit = Compiler()(state);
-    auto buf = eval(unit);
-    buf += '\0';
-    std::cout << buf.get() << std::endl;
+    FuzzyRat_deleteCode(&code);
+    FuzzyRat_deleteContext(&input);
     exit(0);
 }

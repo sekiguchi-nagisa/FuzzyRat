@@ -24,11 +24,11 @@ static std::default_random_engine createRandomEngine() {
 
 struct EvalState {
     ydsh::ByteBuffer buffer;
-    CompiledUnit &unit;
+    const CompiledUnit &unit;
     std::stack<OpCode *, std::vector<OpCode *>> retStack;
     std::default_random_engine randomEngine;
 
-    EvalState(CompiledUnit &unit) :
+    EvalState(const CompiledUnit &unit) :
             buffer(16), unit(unit), retStack(std::vector<OpCode *>(INIT_STACK_SIZE)),
             randomEngine(createRandomEngine()) {}
 
@@ -36,35 +36,35 @@ struct EvalState {
 };
 
 // eval function
-static OpCode *evalEmpty(EmptyOp *code, EvalState &) {
+static OpCode *evalEmpty(const EmptyOp *code, EvalState &) {
     return code->next().get();
 }
 
-static OpCode *evalAny(AnyOp *code, EvalState &st) {    //FIXME: control character
+static OpCode *evalAny(const AnyOp *code, EvalState &st) {    //FIXME: control character
     char ch = std::uniform_int_distribution<unsigned int>(32, 126)(st.randomEngine);
     st.buffer += ch;
     return code->next().get();
 }
 
-static OpCode *evalChar(CharOp *code, EvalState &st) {
+static OpCode *evalChar(const CharOp *code, EvalState &st) {
     st.buffer += code->code();
     return code->next().get();
 }
 
-static OpCode *evalCharSet(CharSetOp *code, EvalState &st) {
+static OpCode *evalCharSet(const CharSetOp *code, EvalState &st) {
     unsigned int index = std::uniform_int_distribution<unsigned int>(0, code->map().population() - 1)(st.randomEngine);
     st.buffer += code->map().lookup(index);
     return code->next().get();
 }
 
-static OpCode *evalAlt(AltOp *code, EvalState &st) {
+static OpCode *evalAlt(const AltOp *code, EvalState &st) {
     unsigned int size = code->opcodes().size();
 
     unsigned int index = std::uniform_int_distribution<unsigned int>(0, size - 1)(st.randomEngine);
     return code->opcodes()[index].get();
 }
 
-static OpCode *evalCall(CallOp *code, EvalState &st) {
+static OpCode *evalCall(const CallOp *code, EvalState &st) {
     auto *next = code->next().get();
     if(st.retStack.size() == MAX_STACK_SIZE) {
         fatal("reach stack size limit\n");
@@ -73,7 +73,7 @@ static OpCode *evalCall(CallOp *code, EvalState &st) {
     return st.unit.codes()[code->productionId()].get();
 }
 
-static OpCode *evalRet(RetOp *, EvalState &st) {
+static OpCode *evalRet(const RetOp *, EvalState &st) {
     auto *next = st.retStack.top();
     st.retStack.pop();
     return next;
@@ -95,19 +95,20 @@ static const char *toString(OpKind kind) {
 #define PRINT_OP(OP)
 #endif
 
-static OpCode *eval(OpCode *code, EvalState &st) {
-#define GEN_CASE(E) case OpKind::E: PRINT_OP(OpKind::E); return eval ## E (static_cast<E ## Op *>(code), st);
+static OpCode *eval(const OpCode *code, EvalState &st) {
+#define GEN_CASE(E) case OpKind::E: PRINT_OP(OpKind::E); return eval ## E (static_cast<const E ## Op *>(code), st);
     switch(code->kind()) {
     EACH_OP_KIND(GEN_CASE)
     }
 #undef GEN_CASE
+    return nullptr;
 }
 
-ydsh::ByteBuffer eval(CompiledUnit &unit) {
+ydsh::ByteBuffer eval(const CompiledUnit &unit) {
     EvalState state(unit);
 
     auto entryPoint = std::make_shared<CallOp>(unit.startId());
-    for(OpCode *code = entryPoint.get(); (code = eval(code, state)) != nullptr;);
+    for(const OpCode *code = entryPoint.get(); (code = eval(code, state)) != nullptr;);
 
     return std::move(state.buffer);
 }
