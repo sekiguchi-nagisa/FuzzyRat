@@ -34,14 +34,13 @@ add_custom_command(OUTPUT ${lexer_src}
 add_custom_target(gen_lexer DEPENDS ${lexer_src})
 
 
-######################
-##     FuzzyRat     ##
-######################
+#########################
+##     libFuzzyRat     ##
+#########################
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++11")
 
 set(SOURCE_FILES
-        src/main.cpp
         ${lexer_src}
         src/node.cpp
         src/parser.cpp
@@ -54,7 +53,15 @@ set(SOURCE_FILES
 
 include_directories(src)
 include_directories(include)
-add_executable(FuzzyRat ${SOURCE_FILES})
+add_library(FuzzyRat_static STATIC ${SOURCE_FILES})
+
+
+######################
+##     FuzzyRat     ##
+######################
+
+add_executable(FuzzyRat src/main.cpp)
+target_link_libraries(FuzzyRat FuzzyRat_static)
 
 
 #+++++++++++++++++++++++++#
