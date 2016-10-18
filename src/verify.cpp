@@ -21,12 +21,7 @@
 
 namespace fuzzyrat {
 
-struct NodeVerifier : protected NodeVisitor {
-    virtual ~NodeVerifier() = default;
-    virtual  void verify(ProductionMap &map) throw(SemanticError) = 0;
-};
-
-class SymbolVerifier : public NodeVerifier {
+class SymbolVerifier : protected NodeVisitor {
 private:
     ProductionMap *map;
 
@@ -34,7 +29,7 @@ public:
     SymbolVerifier() : map(nullptr) {}
     ~SymbolVerifier() = default;
 
-    void verify(ProductionMap &map) throw(SemanticError) override;
+    void verify(ProductionMap &map) throw(SemanticError);
 
 private:
 #define GEN_VISIT(E) void visit(E ## Node &node) override;
@@ -99,17 +94,42 @@ void verify(GrammarState &state) throw(SemanticError) {
     SymbolVerifier().verify(state.map());
 }
 
+class NodeTranslator : protected NodeVisitor {
+private:
+    NodePtr retNode;
 
-class NodeSimplifier : protected NodeVisitor {
+public:
+    NodeTranslator() = default;
+    virtual ~NodeTranslator() = default;
+
+protected:
+    void setRetNode(Node &node) {
+        this->retNode = NodePtr(&node);
+    }
+
+    void setRetNode(NodePtr &&node) {
+        this->retNode = std::move(node);
+    }
+
+    NodePtr translate(NodePtr &node) {
+        node->accept(*this);
+        return std::move(this->retNode);
+    }
+
+    void replace(NodePtr &nodePtr) {
+        nodePtr = this->translate(nodePtr);
+    }
+};
+
+
+class NodeSimplifier : public NodeTranslator {
 private:
     ProductionMap *map;
-
-    NodePtr retNode;
 
     unsigned int repeatIndex;
 
 public:
-    NodeSimplifier() : map(nullptr), retNode(nullptr), repeatIndex(0) {}
+    NodeSimplifier() : map(nullptr), repeatIndex(0) {}
     ~NodeSimplifier() = default;
 
     void operator()(ProductionMap &map);
@@ -118,12 +138,6 @@ private:
 #define GEN_VISIT(E) void visit(E ## Node &node) override;
     EACH_NODE_KIND(GEN_VISIT)
 #undef GEN_VISIT
-
-    void setRetNode(Node &node);
-    void setRetNode(NodePtr &&node);
-
-    NodePtr translate(NodePtr &node);
-    void replace(NodePtr &nodePtr);
 
     std::string genRepeatName();
 };
@@ -224,23 +238,6 @@ void NodeSimplifier::operator()(ProductionMap &map) {
         this->replace(node);
         (*this->map)[s] = std::move(node);
     }
-}
-
-void NodeSimplifier::setRetNode(Node &node) {
-    this->retNode = NodePtr(&node);
-}
-
-void NodeSimplifier::setRetNode(NodePtr &&node) {
-    this->retNode = std::move(node);
-}
-
-NodePtr NodeSimplifier::translate(NodePtr &node) {
-    node->accept(*this);
-    return std::move(this->retNode);
-}
-
-void NodeSimplifier::replace(NodePtr &nodePtr) {
-    nodePtr = this->translate(nodePtr);
 }
 
 std::string NodeSimplifier::genRepeatName() {
