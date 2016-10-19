@@ -251,4 +251,130 @@ void desugar(GrammarState &state) {
     NodeSimplifier()(state.map());
 }
 
+
+class SpaceInserter : public NodeTranslator {
+private:
+    NodePtr space_;
+
+public:
+    SpaceInserter() = default;
+    ~SpaceInserter() = default;
+
+    void operator()(GrammarState &state);
+
+private:
+#define GEN_VISIT(E) void visit(E ## Node &node) override;
+    EACH_NODE_KIND(GEN_VISIT)
+#undef GEN_VISIT
+
+    NodePtr space() const {
+        return NodePtr(this->space_);
+    }
+};
+
+// ###########################
+// ##     SpaceInserter     ##
+// ###########################
+
+void SpaceInserter::visit(AnyNode &node) {
+    this->setRetNode(node);
+}
+
+void SpaceInserter::visit(EmptyNode &node) {
+    this->setRetNode(node);
+}
+
+void SpaceInserter::visit(CharSetNode &node) {
+    this->setRetNode(node);
+}
+
+void SpaceInserter::visit(StringNode &node) {
+    this->setRetNode(node);
+}
+
+void SpaceInserter::visit(OptionNode &node) {
+    this->setRetNode(node);
+}
+
+/**
+ * A*
+ * => (<space> A)*
+ *
+ */
+void SpaceInserter::visit(ZeroOrMoreNode &node) {
+    auto seq = shared<SequenceNode>(this->space(), this->translate(node.exprNode()));
+    node.exprNode() = std::move(seq);
+    this->setRetNode(node);
+}
+
+/**
+ * A+
+ * => (<space> A)+
+ *
+ */
+void SpaceInserter::visit(OneOrMoreNode &node) {
+    auto seq = shared<SequenceNode>(this->space(), this->translate(node.exprNode()));
+    node.exprNode() = std::move(seq);
+    this->setRetNode(node);
+}
+
+void SpaceInserter::visit(NonTerminalNode &node) {
+    this->setRetNode(node);
+}
+
+/**
+ * A B
+ * => A <Space> B
+ *
+ */
+void SpaceInserter::visit(SequenceNode &node) {
+    this->replace(node.leftNode());
+    auto seq = shared<SequenceNode>(this->space(), this->translate(node.rightNode()));
+    node.rightNode() = std::move(seq);
+    this->setRetNode(node);
+}
+
+void SpaceInserter::visit(AlternativeNode &node) {
+    this->replace(node.leftNode());
+    this->replace(node.rightNode());
+    this->setRetNode(node);
+}
+
+void SpaceInserter::operator()(GrammarState &state) {   //FIXME: support non-unit newline(carriage return)
+    // generate space
+    {
+        Token token = {0, 0};
+        this->space_ = shared<ZeroOrMoreNode>(shared<CharSetNode>(token, "[ \t\n]"), token);
+    }
+
+    for(auto &e : state.map()) {
+        if(!isLexicalProduction(e.first)) {
+            this->replace(e.second);
+        }
+    }
+
+    /**
+     * update start production
+     *
+     * A = B
+     * => A' = <space> A <space>
+     *
+     */
+    if(!isLexicalProduction(state.startSymbol())) {
+        std::string old = state.startSymbol();
+        std::string name = old;
+        name += "'";
+        state.setStartSymbol(name);
+        Token token = {0, 0};
+        auto start = shared<SequenceNode>(
+                this->space(),
+                shared<SequenceNode>(shared<NonTerminalNode>(token, std::move(old)), this->space()));
+        state.map().insert(std::make_pair(std::move(name), std::move(start)));
+    }
+}
+
+void insertSpace(GrammarState &state) {
+    SpaceInserter()(state);
+}
+
 } // namespace fuzzyrat

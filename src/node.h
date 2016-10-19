@@ -262,8 +262,11 @@ public:
     }
 };
 
-bool isTerminal(const std::string &);
-bool isNonTerminal(const std::string &);
+bool isLexicalProduction(const std::string &name);
+
+inline bool isRepetition(const Node &node) {
+    return node.is(NodeKind::ZeroOrMore) || node.is(NodeKind::OneOrMore);
+}
 
 using ProductionMap = std::unordered_map<std::string, NodePtr>;
 

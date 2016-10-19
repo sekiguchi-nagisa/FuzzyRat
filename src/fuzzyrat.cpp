@@ -91,6 +91,7 @@ FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext *input) {
                           << state.lexer().formatLineMarker(lineToken, e.token()));
     }
 
+    insertSpace(state); //FIXME: disable space insertion by specifying an option.
     desugar(state);
     return new FuzzyRatCode(Compiler()(state));
 }

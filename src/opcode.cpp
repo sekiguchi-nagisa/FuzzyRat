@@ -111,9 +111,10 @@ static OpCode *eval(const OpCode *code, EvalState &st) {
 #define GEN_CASE(E) case OpKind::E: PRINT_OP(OpKind::E); return eval ## E (static_cast<const E ## Op *>(code), st);
     switch(code->kind()) {
     EACH_OP_KIND(GEN_CASE)
+    default:
+        return nullptr;
     }
 #undef GEN_CASE
-    return nullptr;
 }
 
 ydsh::ByteBuffer eval(const CompiledUnit &unit) {

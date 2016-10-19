@@ -37,16 +37,8 @@ static bool isUpperLetter(char ch) {
     return std::isalpha(ch) && std::isupper(ch);
 }
 
-static bool isLowerLetter(char ch) {
-    return std::isalpha(ch) && std::islower(ch);
-}
-
-bool isTerminal(const std::string &name) {
+bool isLexicalProduction(const std::string &name) {
     return !name.empty() && (name.front() == '_'  || isUpperLetter(name.front()));
-}
-
-bool isNonTerminal(const std::string &name) {
-    return !name.empty() && isLowerLetter(name.front());
 }
 
 } // namespace fuzzyrat
