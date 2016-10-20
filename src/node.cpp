@@ -41,4 +41,74 @@ bool isLexicalProduction(const std::string &name) {
     return !name.empty() && (name.front() == '_'  || isUpperLetter(name.front()));
 }
 
+// #########################
+// ##     NodePrinter     ##
+// #########################
+
+void NodePrinter::printGroup(Node &node, bool exceptSeq) {
+    bool paren = node.is(NodeKind::Alternative) || (!exceptSeq && node.is(NodeKind::Sequence));
+    if(paren) {
+        this->stream << "(";
+    }
+
+    node.accept(*this);
+
+    if(paren) {
+        this->stream << ")";
+    }
+}
+
+void NodePrinter::visit(AnyNode &) {
+    this->stream << ".";
+}
+
+void NodePrinter::visit(EmptyNode &) {}
+
+void NodePrinter::visit(CharSetNode &node) {
+    this->stream << node.value();
+}
+
+void NodePrinter::visit(StringNode &node) {
+    this->stream << node.value();
+}
+
+void NodePrinter::visit(OptionNode &node) {
+    this->printGroup(*node.exprNode());
+    this->stream << "?";
+}
+
+void NodePrinter::visit(ZeroOrMoreNode &node) {
+    this->printGroup(*node.exprNode());
+    this->stream << "*";
+}
+
+void NodePrinter::visit(OneOrMoreNode &node) {
+    this->printGroup(*node.exprNode());
+    this->stream << "+";
+}
+
+void NodePrinter::visit(NonTerminalNode &node) {
+    this->stream << node.name();
+}
+
+void NodePrinter::visit(SequenceNode &node) {
+    this->printGroup(*node.leftNode(), true);
+    this->stream << " ";
+    this->printGroup(*node.rightNode(), true);
+}
+
+void NodePrinter::visit(AlternativeNode &node) {
+    node.leftNode()->accept(*this);
+    this->stream << " | ";
+    node.rightNode()->accept(*this);
+}
+
+void NodePrinter::operator()(const ProductionMap &map) {
+    for(auto &e : map) {
+        this->stream << e.first << " = ";
+        e.second->accept(*this);
+        this->stream << ";" << std::endl << std::endl;
+    }
+}
+
 } // namespace fuzzyrat

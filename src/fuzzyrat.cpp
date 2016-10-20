@@ -61,7 +61,7 @@ static void defineSpace(GrammarState &state) {  //FIXME: support non-unit newlin
     const char *name = "_";
 
     Token token = {0, 0};
-    auto node = shared<ZeroOrMoreNode>(shared<CharSetNode>(token, "[ \t\n]"), token);
+    auto node = shared<ZeroOrMoreNode>(shared<CharSetNode>(token, "[ \\t\\n]"), token);
 
     state.map().insert(std::make_pair(name, std::move(node)));
 }
@@ -102,7 +102,17 @@ FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext *input) {
     }
 
     insertSpace(state); //FIXME: disable space insertion by specifying an option.
+    log<LogLevel::debug>([&](std::ostream &stream) {
+        stream << "before desugar" << std::endl;
+        NodePrinter printer(stream); printer(state.map());
+    });
+
     desugar(state);
+    log<LogLevel::debug>([&](std::ostream &stream) {
+        stream << "after desugar" << std::endl;
+        NodePrinter printer(stream); printer(state.map());
+    });
+
     return new FuzzyRatCode(Compiler()(state));
 }
 

@@ -278,6 +278,25 @@ struct NodeVisitor {
 #undef GEN_VISIT
 };
 
+class NodePrinter : protected NodeVisitor {
+private:
+    std::ostream &stream;
+
+public:
+    NodePrinter(std::ostream &stream) : stream(stream) {}
+    ~NodePrinter() = default;
+
+private:
+#define GEN_VISIT(E) void visit(E ## Node &node) override;
+    EACH_NODE_KIND(GEN_VISIT)
+#undef GEN_VISIT
+
+    void printGroup(Node &node, bool exceptSeq = false);
+
+public:
+    void operator()(const ProductionMap &map);
+};
+
 
 } // namespace fuzzyrat
 
