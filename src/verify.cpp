@@ -268,7 +268,7 @@ private:
 #undef GEN_VISIT
 
     NodePtr space() const {
-        return NodePtr(this->space_);
+        return this->space_;
     }
 };
 
@@ -340,11 +340,10 @@ void SpaceInserter::visit(AlternativeNode &node) {
     this->setRetNode(node);
 }
 
-void SpaceInserter::operator()(GrammarState &state) {   //FIXME: support non-unit newline(carriage return)
-    // generate space
+void SpaceInserter::operator()(GrammarState &state) {
     {
         Token token = {0, 0};
-        this->space_ = shared<ZeroOrMoreNode>(shared<CharSetNode>(token, "[ \t\n]"), token);
+        this->space_ = shared<NonTerminalNode>(token, "_");
     }
 
     for(auto &e : state.map()) {
