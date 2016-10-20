@@ -211,7 +211,9 @@ static std::vector<Node *> getFlattenView(Node &leftNode, Node &rightNode) {
 }
 
 void Compiler::generateAlternative(Node &leftNode, Node &rightNode) {
-    auto cur = this->extract();
+    // backup current head/tail
+    auto oldTail = this->tail;
+    auto oldHead = this->extract();
 
     auto empty = std::make_shared<EmptyOp>();
     auto view = getFlattenView(leftNode, rightNode);
@@ -224,14 +226,12 @@ void Compiler::generateAlternative(Node &leftNode, Node &rightNode) {
         values[i] = this->extract();
     }
 
-    auto next = std::make_shared<AltOp>(std::move(values));
-    if(cur) {
-        cur->setNext(std::move(next));
-    } else {
-        cur = std::move(next);
-    }
-    this->head = std::move(cur);
-    this->tail = std::move(empty);
+    // restore head/tail
+    this->head = std::move(oldHead);
+    this->tail = std::move(oldTail);
+
+    this->generate<AltOp>(std::move(values));
+    this->append(std::move(empty));
 }
 
 unsigned int Compiler::getProductionId(const std::string &name) {
