@@ -145,8 +145,51 @@ void Compiler::visit(SequenceNode &node) {
     node.rightNode()->accept(*this);
 }
 
+static void fillFlattenView(std::vector<Node *> &values, bool &hasEmpty, std::array<Node *, 2> &&nodes) {
+    for(auto *node : nodes) {
+        if (node->is(NodeKind::Alternative)) {
+            auto *altNode = static_cast<AlternativeNode *>(node);
+            fillFlattenView(values, hasEmpty, {{altNode->leftNode().get(), altNode->rightNode().get()}});
+        } else if(node->is(NodeKind::Empty)) {
+            if(!hasEmpty) {
+                hasEmpty = true;
+                values.push_back(node);
+            }
+        } else {
+            values.push_back(node);
+        }
+    }
+}
+
+static std::vector<Node *> getFlattenView(Node &leftNode, Node &rightNode) {
+    std::vector<Node *> values;
+    bool hasEmpty = false;
+    fillFlattenView(values, hasEmpty, {{&leftNode, &rightNode}});
+    return values;
+}
+
 void Compiler::visit(AlternativeNode &node) {
-    this->generateAlternative(*node.leftNode(), *node.rightNode());
+    // backup current head/tail
+    auto oldTail = this->tail;
+    auto oldHead = this->extract();
+
+    auto empty = std::make_shared<EmptyOp>();
+    auto view = getFlattenView(*node.leftNode(), *node.rightNode());
+    const unsigned int size = view.size();
+
+    std::vector<OpCodePtr> values(view.size());
+    for(unsigned int i = 0; i < size; i++) {
+        view[i]->accept(*this);
+        this->tail->setNext(empty);
+        values[i] = this->extract();
+    }
+
+    // restore head/tail
+    this->head = std::move(oldHead);
+    this->tail = std::move(oldTail);
+
+    this->generate<AltOp>(std::move(values));
+    this->append(std::move(empty));
 }
 
 void Compiler::visit(NonTerminalNode &node) {
@@ -185,53 +228,6 @@ void Compiler::append(OpCodePtr &&code) {
         this->head = std::move(code);
         this->tail = this->head;
     }
-}
-
-static void fillFlattenView(std::vector<Node *> &values, bool &hasEmpty, std::array<Node *, 2> &&nodes) {
-    for(auto *node : nodes) {
-        if (node->is(NodeKind::Alternative)) {
-            auto *altNode = static_cast<AlternativeNode *>(node);
-            fillFlattenView(values, hasEmpty, {{altNode->leftNode().get(), altNode->rightNode().get()}});
-        } else if(node->is(NodeKind::Empty)) {
-            if(!hasEmpty) {
-                hasEmpty = true;
-                values.push_back(node);
-            }
-        } else {
-            values.push_back(node);
-        }
-    }
-}
-
-static std::vector<Node *> getFlattenView(Node &leftNode, Node &rightNode) {
-    std::vector<Node *> values;
-    bool hasEmpty = false;
-    fillFlattenView(values, hasEmpty, {{&leftNode, &rightNode}});
-    return values;
-}
-
-void Compiler::generateAlternative(Node &leftNode, Node &rightNode) {
-    // backup current head/tail
-    auto oldTail = this->tail;
-    auto oldHead = this->extract();
-
-    auto empty = std::make_shared<EmptyOp>();
-    auto view = getFlattenView(leftNode, rightNode);
-    const unsigned int size = view.size();
-
-    std::vector<OpCodePtr> values(view.size());
-    for(unsigned int i = 0; i < size; i++) {
-        view[i]->accept(*this);
-        this->tail->setNext(empty);
-        values[i] = this->extract();
-    }
-
-    // restore head/tail
-    this->head = std::move(oldHead);
-    this->tail = std::move(oldTail);
-
-    this->generate<AltOp>(std::move(values));
-    this->append(std::move(empty));
 }
 
 unsigned int Compiler::getProductionId(const std::string &name) {
