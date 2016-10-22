@@ -73,7 +73,7 @@ std::pair<Token, NodePtr> Parser::parse_production() {
                 EACH_LA_production(GEN_ALTER)
 #undef GEN_ALTER
         };
-        this->alternativeError(ydsh::arraySize(kinds), kinds);
+        this->alternativeError(kinds);
     }
 
 }
@@ -160,7 +160,7 @@ NodePtr Parser::parse_primary() {
     }
     case STRING: {
         Token token = this->expect(STRING);
-        return shared<StringNode>(token, this->lexer->toTokenText(token));  //FIXME: unquote
+        return shared<StringNode>(token, this->lexer->toTokenText(token));
     }
     default:
         TokenKind kinds[] = {
@@ -168,7 +168,7 @@ NodePtr Parser::parse_primary() {
                 EACH_LA_primary(GEN_ALTER)
 #undef GEN_ALTER
         };
-        this->alternativeError(ydsh::arraySize(kinds), kinds);
+        this->alternativeError(kinds);
     }
 }
 
@@ -266,7 +266,7 @@ NodePtr Parser::parse_regexPrimary() {
                 EACH_LA_regexPrimary(GEN_ALTER)
 #undef GEN_ALTER
         };
-        this->alternativeError(ydsh::arraySize(kinds), kinds);
+        this->alternativeError(kinds);
     }
 }
 
