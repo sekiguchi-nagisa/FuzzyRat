@@ -66,7 +66,10 @@ static void defineSpace(GrammarState &state) {  //FIXME: support non-unit newlin
     state.map().insert(std::make_pair(name, std::move(node)));
 }
 
-FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext *input) {
+FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **ptr) {
+    assert(ptr != nullptr);
+    auto input = *ptr;
+
     GrammarState state(input->sourceName.c_str(), input->fp);
 
     defineSpace(state);
@@ -113,7 +116,9 @@ FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext *input) {
         NodePrinter printer(stream); printer(state.map());
     });
 
-    return new FuzzyRatCode(Compiler()(state));
+    auto code = new FuzzyRatCode(Compiler()(state));
+    FuzzyRat_deleteContext(ptr);
+    return code;
 }
 
 void FuzzyRat_deleteCode(FuzzyRatCode **code) {

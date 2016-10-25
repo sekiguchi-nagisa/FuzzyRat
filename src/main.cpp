@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
     auto *input = FuzzyRat_newContext(fileName, fp);
     FuzzyRat_setStartProduction(input, startSymbol);
-    auto code = FuzzyRat_compile(input);
+    auto code = FuzzyRat_compile(&input);
 
     for(unsigned int i = 0; i < count; i++) {
         FuzzyRatResult result;
