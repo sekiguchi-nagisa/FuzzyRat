@@ -26,14 +26,17 @@ namespace fuzzyrat {
 static constexpr unsigned int MAX_STACK_SIZE = 2 * 1024 * 1024;
 static constexpr unsigned int INIT_STACK_SIZE = 256;
 
-static std::default_random_engine createRandomEngine() {
-    std::vector<int> v(32);
-    std::random_device rdev;
-    std::generate(v.begin(), v.end(), std::ref(rdev));
-    std::seed_seq seed(v.begin(), v.end());
-    return std::default_random_engine(seed);
-}
+struct DefaultRandomEngineFactory {
+    std::default_random_engine operator()() const {
+        std::vector<int> v(32);
+        std::random_device rdev;
+        std::generate(v.begin(), v.end(), std::ref(rdev));
+        std::seed_seq seed(v.begin(), v.end());
+        return std::default_random_engine(seed);
+    }
+};
 
+template <typename RandFactory>
 struct EvalState {
     ydsh::ByteBuffer buffer;
     const CompiledUnit &unit;
@@ -42,41 +45,47 @@ struct EvalState {
 
     EvalState(const CompiledUnit &unit) :
             buffer(16), unit(unit), retStack(std::vector<OpCode *>(INIT_STACK_SIZE)),
-            randomEngine(createRandomEngine()) {}
+            randomEngine(RandFactory()()) {}
 
     ~EvalState() = default;
 };
 
 // eval function
-static OpCode *evalEmpty(const EmptyOp *code, EvalState &) {
+template <typename F>
+static OpCode *evalEmpty(const EmptyOp *code, EvalState<F> &) {
     return code->next().get();
 }
 
-static OpCode *evalAny(const AnyOp *code, EvalState &st) {    //FIXME: control character
+template <typename F>
+static OpCode *evalAny(const AnyOp *code, EvalState<F> &st) {    //FIXME: control character
     char ch = std::uniform_int_distribution<unsigned int>(32, 126)(st.randomEngine);
     st.buffer += ch;
     return code->next().get();
 }
 
-static OpCode *evalChar(const CharOp *code, EvalState &st) {
+template <typename F>
+static OpCode *evalChar(const CharOp *code, EvalState<F> &st) {
     st.buffer += code->code();
     return code->next().get();
 }
 
-static OpCode *evalCharSet(const CharSetOp *code, EvalState &st) {
+template <typename F>
+static OpCode *evalCharSet(const CharSetOp *code, EvalState<F> &st) {
     unsigned int index = std::uniform_int_distribution<unsigned int>(0, code->map().population() - 1)(st.randomEngine);
     st.buffer += code->map().lookup(index);
     return code->next().get();
 }
 
-static OpCode *evalAlt(const AltOp *code, EvalState &st) {
+template <typename F>
+static OpCode *evalAlt(const AltOp *code, EvalState<F> &st) {
     unsigned int size = code->opcodes().size();
 
     unsigned int index = std::uniform_int_distribution<unsigned int>(0, size - 1)(st.randomEngine);
     return code->opcodes()[index].get();
 }
 
-static OpCode *evalCall(const CallOp *code, EvalState &st) {
+template <typename F>
+static OpCode *evalCall(const CallOp *code, EvalState<F> &st) {
     auto *next = code->next().get();
     if(st.retStack.size() == MAX_STACK_SIZE) {
         fatal("reach stack size limit\n");
@@ -85,7 +94,8 @@ static OpCode *evalCall(const CallOp *code, EvalState &st) {
     return st.unit.codes()[code->productionId()].get();
 }
 
-static OpCode *evalRet(const RetOp *, EvalState &st) {
+template <typename F>
+static OpCode *evalRet(const RetOp *, EvalState<F> &st) {
     auto *next = st.retStack.top();
     st.retStack.pop();
     return next;
@@ -107,7 +117,8 @@ static const char *toString(OpKind kind) {
 #define PRINT_OP(OP)
 #endif
 
-static OpCode *eval(const OpCode *code, EvalState &st) {
+template <typename F>
+static OpCode *eval(const OpCode *code, EvalState<F> &st) {
 #define GEN_CASE(E) case OpKind::E: PRINT_OP(OpKind::E); return eval ## E (static_cast<const E ## Op *>(code), st);
     switch(code->kind()) {
     EACH_OP_KIND(GEN_CASE)
@@ -118,7 +129,7 @@ static OpCode *eval(const OpCode *code, EvalState &st) {
 }
 
 ydsh::ByteBuffer eval(const CompiledUnit &unit) {
-    EvalState state(unit);
+    EvalState<DefaultRandomEngineFactory> state(unit);
 
     auto entryPoint = std::make_shared<CallOp>(unit.startId());
     for(const OpCode *code = entryPoint.get(); (code = eval(code, state)) != nullptr;);
