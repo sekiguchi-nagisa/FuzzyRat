@@ -29,16 +29,6 @@ namespace fuzzyrat {
 constexpr unsigned int MAX_STACK_SIZE = 2 * 1024 * 1024;
 constexpr unsigned int INIT_STACK_SIZE = 256;
 
-struct DefaultRandomEngineFactory {
-    std::default_random_engine operator()() const {
-        std::vector<int> v(32);
-        std::random_device rdev;
-        std::generate(v.begin(), v.end(), std::ref(rdev));
-        std::seed_seq seed(v.begin(), v.end());
-        return std::default_random_engine(seed);
-    }
-};
-
 template <typename RandFactory>
 struct EvalState {
     ydsh::ByteBuffer buffer;

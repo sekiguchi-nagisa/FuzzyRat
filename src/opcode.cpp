@@ -18,6 +18,16 @@
 
 namespace fuzzyrat {
 
+struct DefaultRandomEngineFactory {
+    std::default_random_engine operator()() const {
+        std::vector<int> v(32);
+        std::random_device rdev;
+        std::generate(v.begin(), v.end(), std::ref(rdev));
+        std::seed_seq seed(v.begin(), v.end());
+        return std::default_random_engine(seed);
+    }
+};
+
 ydsh::ByteBuffer eval(const CompiledUnit &unit) {
     EvalState<DefaultRandomEngineFactory> state(unit);
 
