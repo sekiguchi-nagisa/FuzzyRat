@@ -30,7 +30,7 @@ public:
     Parser() = default;
     ~Parser() = default;
 
-    void operator()(GrammarState &state);
+    void operator()(GrammarState &state, Lexer &lexer);
 
 private:
     std::pair<Token, NodePtr> parse_production();

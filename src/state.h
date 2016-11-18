@@ -32,8 +32,6 @@ using ProductionMap = std::unordered_map<std::string, ydsh::IntrusivePtr<Node>>;
 
 class GrammarState {
 private:
-    Lexer lexer_;
-
     /**
      * indicate start production
      */
@@ -47,12 +45,8 @@ private:
 public:
     NON_COPYABLE(GrammarState);
 
-    GrammarState(const char *fileName, FILE *fp) : lexer_(fileName, fp), startSymbol_(), map_() {}
+    GrammarState() = default;
     ~GrammarState() = default;
-
-    Lexer &lexer() {
-        return this->lexer_;
-    }
 
     const std::string &startSymbol() const {
         return this->startSymbol_;

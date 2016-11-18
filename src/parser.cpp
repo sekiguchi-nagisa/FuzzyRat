@@ -42,8 +42,8 @@ namespace fuzzyrat {
 // ##     Parser     ##
 // ####################
 
-void Parser::operator()(GrammarState &state) {
-    this->lexer = &state.lexer();
+void Parser::operator()(GrammarState &state, Lexer &lexer) {
+    this->lexer = &lexer;
     this->fetchNext();
 
     while(this->curKind != EOS) {

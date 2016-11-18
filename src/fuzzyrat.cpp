@@ -66,16 +66,9 @@ static void defineSpace(GrammarState &state) {  //FIXME: support non-unit newlin
     state.map().insert(std::make_pair(name, std::move(node)));
 }
 
-FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **ptr) {
-    assert(ptr != nullptr);
-    auto input = *ptr;
-
-    GrammarState state(input->sourceName.c_str(), input->fp);
-
-    defineSpace(state);
+static void parseAndVerify(GrammarState &state, Lexer &lexer) {
     try {
-        state.setStartSymbol(input->startProduction);
-        Parser()(state);
+        Parser()(state, lexer);
 
         // check start production
         if(state.startSymbol().empty()) {
@@ -90,18 +83,32 @@ FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **ptr) {
 
         verify(state);
     } catch(const ParseError &e) {
-        Token errorToken = state.lexer().shiftEOS(e.getErrorToken());
-        Token lineToken = state.lexer().getLineToken(errorToken);
-        LOG_ERROR(formatSourceName(state.lexer(), errorToken)
+        Token errorToken = lexer.shiftEOS(e.getErrorToken());
+        Token lineToken = lexer.getLineToken(errorToken);
+        LOG_ERROR(formatSourceName(lexer, errorToken)
                           << " " << e.getMessage() << std::endl
-                          << state.lexer().toTokenText(lineToken) << std::endl
-                          << state.lexer().formatLineMarker(lineToken, errorToken));
+                          << lexer.toTokenText(lineToken) << std::endl
+                          << lexer.formatLineMarker(lineToken, errorToken));
     } catch(const SemanticError &e) {
-        Token lineToken = state.lexer().getLineToken(e.token());
-        LOG_ERROR(formatSourceName(state.lexer(), e.token())
+        Token lineToken = lexer.getLineToken(e.token());
+        LOG_ERROR(formatSourceName(lexer, e.token())
                           << " " << toString(e.kind()) << std::endl
-                          << state.lexer().toTokenText(lineToken) << std::endl
-                          << state.lexer().formatLineMarker(lineToken, e.token()));
+                          << lexer.toTokenText(lineToken) << std::endl
+                          << lexer.formatLineMarker(lineToken, e.token()));
+    }
+}
+
+FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **ptr) {
+    assert(ptr != nullptr);
+    auto input = *ptr;
+
+    GrammarState state;
+    state.setStartSymbol(input->startProduction);
+    defineSpace(state);
+
+    {
+        Lexer lexer(input->sourceName.c_str(), input->fp);
+        parseAndVerify(state, lexer);
     }
 
     insertSpace(state); //FIXME: disable space insertion by specifying an option.
