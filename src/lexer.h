@@ -57,7 +57,7 @@ private:
 public:
     NON_COPYABLE(Lexer);
 
-    Lexer(const char *fileName, FILE *fp) : LexerBase(fp), fileName_(fileName) {}
+    Lexer(const char *fileName, const char *data, unsigned int size) : LexerBase(data, size), fileName_(fileName) {}
     ~Lexer() = default;
 
     const char *filename() const {

@@ -15,6 +15,7 @@
  */
 
 #include <string>
+#include <fstream>
 
 #include <fuzzyrat.h>
 #include "logger.h"
@@ -27,15 +28,25 @@ using namespace fuzzyrat;
 
 struct FuzzyRatInputContext {
     std::string sourceName;
-    FILE *fp;
+    ydsh::ByteBuffer buffer;
     std::string startProduction;
 
-    FuzzyRatInputContext(const char *sourceName, FILE *fp) :
-            sourceName(sourceName), fp(fp), startProduction() {}
+    FuzzyRatInputContext(const char *sourceName, ydsh::ByteBuffer &&buffer) :
+            sourceName(sourceName), buffer(std::move(buffer)), startProduction() {}
 };
 
-FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName, FILE *fp) {
-    return new FuzzyRatInputContext(sourceName, fp);
+FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName) {
+    std::ifstream stream(sourceName);
+    if(!stream) {
+        return nullptr;
+    }
+
+    ydsh::ByteBuffer buffer;
+    for(std::string line; std::getline(stream, line);) {
+        buffer.append(line.c_str(), line.size());
+        buffer += '\n';
+    }
+    return new FuzzyRatInputContext(sourceName, std::move(buffer));
 }
 
 void FuzzyRat_deleteContext(FuzzyRatInputContext **input) {
@@ -107,7 +118,7 @@ FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **ptr) {
     defineSpace(state);
 
     {
-        Lexer lexer(input->sourceName.c_str(), input->fp);
+        Lexer lexer(input->sourceName.c_str(), input->buffer.get(), input->buffer.size());
         parseAndVerify(state, lexer);
     }
 

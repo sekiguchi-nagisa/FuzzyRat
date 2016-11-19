@@ -27,7 +27,13 @@ extern "C" {
 struct FuzzyRatInputContext;
 typedef struct FuzzyRatInputContext FuzzyRatInputContext;
 
-FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName, FILE *fp);
+/**
+ * 
+ * @param sourceName
+ * @return
+ * return null, if cannot open file.
+ */
+FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName);
 
 void FuzzyRat_deleteContext(FuzzyRatInputContext **input);
 

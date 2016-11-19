@@ -78,14 +78,12 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    FILE *fp = fopen(fileName, "rb");
-    if(fp == nullptr) {
+    auto *input = FuzzyRat_newContext(fileName);
+    if(input == nullptr) {
         std::cerr << "cannot read file: " << fileName << std::endl;
         exit(1);
     }
 
-
-    auto *input = FuzzyRat_newContext(fileName, fp);
     FuzzyRat_setStartProduction(input, startSymbol);
     auto code = FuzzyRat_compile(&input);
 
