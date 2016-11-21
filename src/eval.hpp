@@ -111,6 +111,16 @@ OpCode *eval(const OpCode *code, EvalState<F> &st) {
 #undef GEN_CASE
 }
 
+template <typename F>
+ydsh::ByteBuffer eval(const CompiledUnit &unit) {
+    EvalState<F> state(unit);
+
+    auto entryPoint = std::make_shared<CallOp>(unit.startId());
+    for(const OpCode *code = entryPoint.get(); (code = eval(code, state)) != nullptr;);
+
+    return std::move(state.buffer);
+}
+
 } // namespace fuzzyrat
 
 

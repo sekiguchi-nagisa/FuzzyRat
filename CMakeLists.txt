@@ -47,7 +47,6 @@ set(SOURCE_FILES
         src/error.cpp
         src/verify.cpp
         src/logger.cpp
-        src/opcode.cpp
         src/compile.cpp
         src/fuzzyrat.cpp)
 

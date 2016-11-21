@@ -23,6 +23,7 @@
 #include "error.h"
 #include "verify.h"
 #include "compile.h"
+#include "eval.hpp"
 
 using namespace fuzzyrat;
 
@@ -146,9 +147,19 @@ void FuzzyRat_deleteCode(FuzzyRatCode **code) {
     }
 }
 
+struct DefaultRandomEngineFactory {
+    std::default_random_engine operator()() const {
+        std::vector<int> v(32);
+        std::random_device rdev;
+        std::generate(v.begin(), v.end(), std::ref(rdev));
+        std::seed_seq seed(v.begin(), v.end());
+        return std::default_random_engine(seed);
+    }
+};
+
 int FuzzyRat_exec(const FuzzyRatCode *code, FuzzyRatResult *result) {
     if(code != nullptr && result != nullptr) {
-        auto buf = eval(code->unit);
+        auto buf = eval<DefaultRandomEngineFactory>(code->unit);
         result->size = buf.size();
         result->data = extract(std::move(buf));
         return 0;
