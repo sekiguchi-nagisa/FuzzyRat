@@ -151,9 +151,9 @@ public:
         }
 
         // search upper bit
-        for(unsigned int i = 64; i < 128; i++) {
-            if(this->map_[1] & (1L << (i - 64)) && bitCount++ == count) {
-                return i;
+        for(unsigned int i = 0; i < 64; i++) {
+            if(this->map_[1] & (1L << i) && bitCount++ == count) {
+                return i + 64;
             }
         }
         return -1;

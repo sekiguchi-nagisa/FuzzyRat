@@ -75,7 +75,6 @@ std::pair<Token, NodePtr> Parser::parse_production() {
         };
         this->alternativeError(kinds);
     }
-
 }
 
 std::pair<Token, NodePtr> Parser::parse_nonTerminalProduction() {
