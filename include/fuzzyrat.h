@@ -35,6 +35,14 @@ typedef struct FuzzyRatInputContext FuzzyRatInputContext;
  */
 FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName);
 
+/**
+ *
+ * @param input
+ * @param flag
+ * if 0, unset option, otherwise, set option
+ */
+void FuzzyRat_setSpaceInsertion(FuzzyRatInputContext *input, int flag);
+
 void FuzzyRat_deleteContext(FuzzyRatInputContext **input);
 
 void FuzzyRat_setStartProduction(FuzzyRatInputContext *input, const char *productionName);

@@ -22,10 +22,11 @@
 using namespace ydsh;
 
 #define EACH_OPT(OP) \
-    OP(HELP,  "--help", 0,             "show this help message") \
-    OP(HELP2, "-h",     0,             "equivalent to '-h'") \
-    OP(START, "-s",     argv::HAS_ARG, "specify start production") \
-    OP(COUNT, "-c",     argv::HAS_ARG, "specify generation times")
+    OP(HELP,    "--help", 0,             "show this help message") \
+    OP(HELP2,   "-h",     0,             "equivalent to '-h'") \
+    OP(START,   "-s",     argv::HAS_ARG, "specify start production") \
+    OP(COUNT,   "-c",     argv::HAS_ARG, "specify generation times") \
+    OP(NOSPACE, "-n",     0,             "disable space insertion")
 
 enum OptionKind {
 #define GEN_ENUM(E, S, A, M) E,
@@ -53,6 +54,7 @@ int main(int argc, char **argv) {
     const char *startSymbol = nullptr;
     const char *fileName = nullptr;
     unsigned int count = 1;
+    int spaceInsertion = 1;
 
     for(auto &cmdline : cmdLines) {
         switch(cmdline.first) {
@@ -65,6 +67,9 @@ int main(int argc, char **argv) {
             break;
         case COUNT:
             count = std::stoi(std::string(cmdline.second));
+            break;
+        case NOSPACE:
+            spaceInsertion = 0;
             break;
         }
     }
@@ -84,6 +89,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    FuzzyRat_setSpaceInsertion(input, spaceInsertion);
     FuzzyRat_setStartProduction(input, startSymbol);
     auto code = FuzzyRat_compile(&input);
 

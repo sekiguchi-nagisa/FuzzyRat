@@ -28,12 +28,13 @@
 using namespace fuzzyrat;
 
 struct FuzzyRatInputContext {
+    bool spaceInsertion;
     std::string sourceName;
     ydsh::ByteBuffer buffer;
     std::string startProduction;
 
     FuzzyRatInputContext(const char *sourceName, ydsh::ByteBuffer &&buffer) :
-            sourceName(sourceName), buffer(std::move(buffer)), startProduction() {}
+            spaceInsertion(true), sourceName(sourceName), buffer(std::move(buffer)), startProduction() {}
 };
 
 FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName) {
@@ -48,6 +49,10 @@ FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName) {
         buffer += '\n';
     }
     return new FuzzyRatInputContext(sourceName, std::move(buffer));
+}
+
+void FuzzyRat_setSpaceInsertion(FuzzyRatInputContext *input, int flag) {
+    input->spaceInsertion = flag != 0;
 }
 
 void FuzzyRat_deleteContext(FuzzyRatInputContext **input) {
@@ -123,7 +128,9 @@ FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **ptr) {
         parseAndVerify(state, lexer);
     }
 
-    insertSpace(state); //FIXME: disable space insertion by specifying an option.
+    if(input->spaceInsertion) {
+        insertSpace(state);
+    }
     log<LogLevel::debug>([&](std::ostream &stream) {
         stream << "before desugar" << std::endl;
         NodePrinter printer(stream); printer(state.map());
