@@ -51,7 +51,7 @@ void FuzzyRat_setStartProduction(FuzzyRatInputContext *input, const char *produc
 struct FuzzyRatCode;
 typedef struct FuzzyRatCode FuzzyRatCode;
 
-FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **input);
+FuzzyRatCode *FuzzyRat_compile(const FuzzyRatInputContext *input);
 
 void FuzzyRat_deleteCode(FuzzyRatCode **code);
 

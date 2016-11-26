@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 
     FuzzyRat_setSpaceInsertion(input, spaceInsertion);
     FuzzyRat_setStartProduction(input, startSymbol);
-    auto code = FuzzyRat_compile(&input);
+    auto code = FuzzyRat_compile(input);
 
     for(unsigned int i = 0; i < count; i++) {
         FuzzyRatResult result;

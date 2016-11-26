@@ -115,13 +115,13 @@ static void parseAndVerify(GrammarState &state, Lexer &lexer) {
     }
 }
 
-FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **ptr) {
-    assert(ptr != nullptr);
-    auto input = *ptr;
-
+FuzzyRatCode *FuzzyRat_compile(const FuzzyRatInputContext *input) {
     GrammarState state;
     state.setStartSymbol(input->startProduction);
-    defineSpace(state);
+
+    if(input->spaceInsertion) {
+        defineSpace(state);
+    }
 
     {
         Lexer lexer(input->sourceName.c_str(), input->buffer.get(), input->buffer.size());
@@ -142,9 +142,7 @@ FuzzyRatCode *FuzzyRat_compile(FuzzyRatInputContext **ptr) {
         NodePrinter printer(stream); printer(state.map());
     });
 
-    auto code = new FuzzyRatCode(Compiler()(state));
-    FuzzyRat_deleteContext(ptr);
-    return code;
+    return new FuzzyRatCode(Compiler()(state));
 }
 
 void FuzzyRat_deleteCode(FuzzyRatCode **code) {
