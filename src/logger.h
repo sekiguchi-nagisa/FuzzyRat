@@ -103,26 +103,9 @@ inline void log(Func func) {
     Logger::instance().apply<level>(std::forward<Func>(func));
 }
 
-template <LogLevel level>
-class FuncTracer {
-private:
-    const char *funcName;
-
-public:
-    NON_COPYABLE(FuncTracer);
-
-    FuncTracer(const char *funcName) : funcName(funcName) {
-        log<level>([&](std::ostream &stream) { stream << "enter:" << this->funcName; });
-    }
-
-    ~FuncTracer() {
-        log<level>([&](std::ostream &stream) { stream << "exit:" << this->funcName; });
-    }
-};
-
 } // namespace fuzzyrat
 
-#define LOG(L, V) log<L>([&](std::ostream &stream) { stream << V; })
+#define LOG(L, V) log<L>([&](std::ostream &____stream) { ____stream << V; })
 
 #define LOG_ERROR(V) LOG(fuzzyrat::LogLevel::error, V)
 #define LOG_WARN(V) LOG(fuzzyrat::LogLevel::warn, V)

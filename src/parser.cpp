@@ -16,7 +16,6 @@
 
 #include "parser.h"
 #include "error.h"
-#include "logger.h"
 
 #define EACH_LA_production(E) \
     E(TERM) \
@@ -78,8 +77,6 @@ std::pair<Token, NodePtr> Parser::parse_production() {
 }
 
 std::pair<Token, NodePtr> Parser::parse_nonTerminalProduction() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     Token token = this->expect(NTERM);
     this->expect(DEF);
     auto node = this->parse_alternative();
@@ -89,8 +86,6 @@ std::pair<Token, NodePtr> Parser::parse_nonTerminalProduction() {
 }
 
 NodePtr Parser::parse_alternative() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     auto leftNode = this->parse_sequence();
     if(this->curKind == ALT) {
         this->expect(ALT);
@@ -101,8 +96,6 @@ NodePtr Parser::parse_alternative() {
 }
 
 NodePtr Parser::parse_sequence() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     auto leftNode = this->parse_suffix();
     switch(this->curKind) {
 #define GEN_CASE(E) case E:
@@ -119,8 +112,6 @@ NodePtr Parser::parse_sequence() {
 }
 
 NodePtr Parser::parse_suffix() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     auto node = this->parse_primary();
     for(bool next = true; next;) {
         switch(this->curKind) {
@@ -142,8 +133,6 @@ NodePtr Parser::parse_suffix() {
 }
 
 NodePtr Parser::parse_primary() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     switch(this->curKind) {
     case POPEN: {
         this->expect(POPEN);
@@ -172,8 +161,6 @@ NodePtr Parser::parse_primary() {
 }
 
 std::pair<Token, NodePtr> Parser::parse_terminalProduction() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     Token token = this->expect(TERM);
     this->expect(DEF);
     auto node = this->parse_regexAlt();
@@ -183,8 +170,6 @@ std::pair<Token, NodePtr> Parser::parse_terminalProduction() {
 }
 
 NodePtr Parser::parse_regexAlt() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     auto leftNode = this->parse_regexSeq();
     if(this->curKind == ALT) {
         this->expect(ALT);
@@ -195,8 +180,6 @@ NodePtr Parser::parse_regexAlt() {
 }
 
 NodePtr Parser::parse_regexSeq() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     auto leftNode = this->parse_regexSuffix();
     switch(this->curKind) {
 #define GEN_CASE(E) case E:
@@ -213,8 +196,6 @@ NodePtr Parser::parse_regexSeq() {
 }
 
 NodePtr Parser::parse_regexSuffix() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     auto node = this->parse_regexPrimary();
     for(bool next = true; next;) {
         switch(this->curKind) {
@@ -236,8 +217,6 @@ NodePtr Parser::parse_regexSuffix() {
 }
 
 NodePtr Parser::parse_regexPrimary() {
-    FuncTracer<LogLevel::debug> tracer(__func__);
-
     switch(this->curKind) {
     case POPEN: {
         this->expect(POPEN);
