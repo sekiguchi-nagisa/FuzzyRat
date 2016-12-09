@@ -264,10 +264,6 @@ public:
 
 bool isLexicalProduction(const std::string &name);
 
-inline bool isRepetition(const Node &node) {
-    return node.is(NodeKind::ZeroOrMore) || node.is(NodeKind::OneOrMore);
-}
-
 using ProductionMap = std::unordered_map<std::string, NodePtr>;
 
 struct NodeVisitor {
