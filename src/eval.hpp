@@ -34,11 +34,10 @@ struct EvalState {
     ydsh::ByteBuffer buffer;
     const CompiledUnit &unit;
     std::stack<OpCode *, std::vector<OpCode *>> retStack;
-    decltype(RandFactory()()) randomEngine;
+    RandFactory randFactory;
 
     EvalState(const CompiledUnit &unit) :
-            buffer(16), unit(unit), retStack(std::vector<OpCode *>(INIT_STACK_SIZE)),
-            randomEngine(RandFactory()()) {}
+            buffer(16), unit(unit), retStack(std::vector<OpCode *>(INIT_STACK_SIZE)), randFactory() {}
 
     ~EvalState() = default;
 };
@@ -51,7 +50,7 @@ OpCode *evalEmpty(const EmptyOp *code, EvalState<F> &) {
 
 template <typename F>
 OpCode *evalAny(const AnyOp *code, EvalState<F> &st) {    //FIXME: control character
-    char ch = std::uniform_int_distribution<unsigned int>(32, 126)(st.randomEngine);
+    char ch = st.randFactory.generate(32, 126);
     st.buffer += ch;
     return code->next().get();
 }
@@ -64,7 +63,7 @@ OpCode *evalChar(const CharOp *code, EvalState<F> &st) {
 
 template <typename F>
 OpCode *evalCharSet(const CharSetOp *code, EvalState<F> &st) {
-    unsigned int index = std::uniform_int_distribution<unsigned int>(0, code->map().population() - 1)(st.randomEngine);
+    unsigned int index = st.randFactory.generate(0, code->map().population() - 1);
     st.buffer += code->map().lookup(index);
     return code->next().get();
 }
@@ -73,7 +72,8 @@ template <typename F>
 OpCode *evalAlt(const AltOp *code, EvalState<F> &st) {
     unsigned int size = code->opcodes().size();
 
-    unsigned int index = std::uniform_int_distribution<unsigned int>(0, size - 1)(st.randomEngine);
+//    unsigned int index = std::uniform_int_distribution<unsigned int>(0, size - 1)(st.randomEngine);
+    unsigned int index = st.randFactory.generate(0, size - 1);
     return code->opcodes()[index].get();
 }
 

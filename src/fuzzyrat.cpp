@@ -152,19 +152,30 @@ void FuzzyRat_deleteCode(FuzzyRatCode **code) {
     }
 }
 
-struct DefaultRandomEngineFactory {
-    std::default_random_engine operator()() const {
+class DefaultRandomFactory {
+private:
+    std::default_random_engine engine;
+
+    static std::default_random_engine init() {
         std::vector<int> v(32);
         std::random_device rdev;
         std::generate(v.begin(), v.end(), std::ref(rdev));
         std::seed_seq seed(v.begin(), v.end());
         return std::default_random_engine(seed);
     }
+
+public:
+    DefaultRandomFactory() : engine(init()) {}
+    ~DefaultRandomFactory() = default;
+
+    unsigned int generate(unsigned int start, unsigned int stop) {
+        return std::uniform_int_distribution<unsigned int>(start, stop)(this->engine);
+    }
 };
 
 int FuzzyRat_exec(const FuzzyRatCode *code, FuzzyRatResult *result) {
     if(code != nullptr && result != nullptr) {
-        auto buf = eval<DefaultRandomEngineFactory>(code->unit);
+        auto buf = eval<DefaultRandomFactory>(code->unit);
         result->size = buf.size();
         result->data = extract(std::move(buf));
         return 0;
