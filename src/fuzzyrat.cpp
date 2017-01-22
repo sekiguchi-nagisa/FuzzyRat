@@ -16,6 +16,7 @@
 
 #include <string>
 #include <fstream>
+#include <random>
 
 #include <fuzzyrat.h>
 #include "logger.h"
@@ -23,7 +24,7 @@
 #include "error.h"
 #include "verify.h"
 #include "compile.h"
-#include "eval.hpp"
+#include "opcode.h"
 
 using namespace fuzzyrat;
 
@@ -82,10 +83,32 @@ void FuzzyRat_setStartProduction(FuzzyRatInputContext *input, const char *produc
     }
 }
 
+class DefaultRandomFactory : public RandFactory {
+private:
+    std::default_random_engine engine;
+
+    static std::default_random_engine init() {
+        std::vector<int> v(32);
+        std::random_device rdev;
+        std::generate(v.begin(), v.end(), std::ref(rdev));
+        std::seed_seq seed(v.begin(), v.end());
+        return std::default_random_engine(seed);
+    }
+
+public:
+    DefaultRandomFactory() : engine(init()) {}
+    ~DefaultRandomFactory() = default;
+
+    unsigned int generate(unsigned int start, unsigned int stop) override {
+        return std::uniform_int_distribution<unsigned int>(start, stop)(this->engine);
+    }
+};
+
 struct FuzzyRatCode {
     CompiledUnit unit;
+    DefaultRandomFactory randomFactory;
 
-    FuzzyRatCode(CompiledUnit &&unit) : unit(std::move(unit)) {}
+    FuzzyRatCode(CompiledUnit &&unit) : unit(std::move(unit)), randomFactory() {}
 };
 
 static void defineSpace(GrammarState &state) {  //FIXME: support non-unit newline(carriage return)
@@ -166,30 +189,9 @@ void FuzzyRat_deleteCode(FuzzyRatCode **code) {
     }
 }
 
-class DefaultRandomFactory {
-private:
-    std::default_random_engine engine;
-
-    static std::default_random_engine init() {
-        std::vector<int> v(32);
-        std::random_device rdev;
-        std::generate(v.begin(), v.end(), std::ref(rdev));
-        std::seed_seq seed(v.begin(), v.end());
-        return std::default_random_engine(seed);
-    }
-
-public:
-    DefaultRandomFactory() : engine(init()) {}
-    ~DefaultRandomFactory() = default;
-
-    unsigned int generate(unsigned int start, unsigned int stop) {
-        return std::uniform_int_distribution<unsigned int>(start, stop)(this->engine);
-    }
-};
-
 int FuzzyRat_exec(const FuzzyRatCode *code, FuzzyRatResult *result) {
     if(code != nullptr && result != nullptr) {
-        auto buf = eval<DefaultRandomFactory>(code->unit);
+        auto buf = eval(code->unit, const_cast<DefaultRandomFactory *>(&code->randomFactory));
         result->size = buf.size();
         result->data = extract(std::move(buf));
         return 0;

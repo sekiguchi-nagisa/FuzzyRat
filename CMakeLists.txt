@@ -48,6 +48,7 @@ set(SOURCE_FILES
         src/verify.cpp
         src/logger.cpp
         src/compile.cpp
+        src/opcode.cpp
         src/fuzzyrat.cpp)
 
 include_directories(src)

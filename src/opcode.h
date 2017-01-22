@@ -243,7 +243,13 @@ public:
     }
 };
 
-ydsh::ByteBuffer eval(const CompiledUnit &unit);
+struct RandFactory {
+    virtual unsigned int generate(unsigned int start, unsigned int stop) = 0;
+    virtual ~RandFactory() = default;
+};
+
+
+ydsh::ByteBuffer eval(const CompiledUnit &unit, RandFactory *randFactory);
 
 
 } // namespace fuzzyrat
