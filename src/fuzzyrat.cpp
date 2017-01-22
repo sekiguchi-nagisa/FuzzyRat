@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Nagisa Sekiguchi
+ * Copyright (C) 2016-2017 Nagisa Sekiguchi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ struct FuzzyRatInputContext {
             spaceInsertion(true), sourceName(sourceName), buffer(std::move(buffer)), startProduction() {}
 };
 
-FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName) {
+FuzzyRatInputContext *FuzzyRat_newContextFromFile(const char *sourceName) {
     std::ifstream stream(sourceName);
     if(!stream) {
         return nullptr;
@@ -48,6 +48,20 @@ FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName) {
         buffer.append(line.c_str(), line.size());
         buffer += '\n';
     }
+    return new FuzzyRatInputContext(sourceName, std::move(buffer));
+}
+
+FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName, const char *data, unsigned int size) {
+    if(data == nullptr || size == 0) {
+        return nullptr;
+    }
+
+    if(sourceName == nullptr) {
+        sourceName = "(null)";
+    }
+
+    ydsh::ByteBuffer buffer;
+    buffer.append(data, size);
     return new FuzzyRatInputContext(sourceName, std::move(buffer));
 }
 

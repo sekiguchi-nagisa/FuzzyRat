@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Nagisa Sekiguchi
+ * Copyright (C) 2016-2017 Nagisa Sekiguchi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,17 @@ typedef struct FuzzyRatInputContext FuzzyRatInputContext;
  * @return
  * return null, if cannot open file.
  */
-FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName);
+FuzzyRatInputContext *FuzzyRat_newContextFromFile(const char *sourceName);
+
+/**
+ *
+ * @param sourceName
+ * @param data
+ * @param size
+ * @return
+ * return null, if data is null or size is 0.
+ */
+FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName, const char *data, unsigned int size);
 
 /**
  *

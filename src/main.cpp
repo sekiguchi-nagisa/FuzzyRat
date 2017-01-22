@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    auto *input = FuzzyRat_newContext(fileName);
+    auto *input = FuzzyRat_newContextFromFile(fileName);
     if(input == nullptr) {
         std::cerr << "cannot read file: " << fileName << std::endl;
         exit(1);
