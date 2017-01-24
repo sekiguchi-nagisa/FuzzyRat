@@ -4,6 +4,7 @@ matrix:
   include:
     # gcc 4.9
     - os: linux
+      dist: trusty
       compiler: gcc
       addons:
         apt:
@@ -15,6 +16,7 @@ matrix:
 
     # gcc 5
     - os: linux
+      dist: trusty
       compiler: gcc
       addons:
         apt:
@@ -26,6 +28,7 @@ matrix:
 
     # gcc 6
     - os: linux
+      dist: trusty
       compiler: gcc
       addons:
         apt:
@@ -37,30 +40,31 @@ matrix:
 
     # clang 3.5
     - os: linux
+      dist: trusty
       compiler: clang
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.5
           packages:
             - clang-3.5
       env: CXX_BIN=clang++-3.5
 
     # clang 3.6
     - os: linux
+      dist: trusty
       compiler: clang
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
       env: CXX_BIN=clang++-3.6
 
     # clang 3.7
     - os: linux
+      dist: trusty
       compiler: clang
       addons:
         apt:
@@ -73,12 +77,12 @@ matrix:
 
     # clang 3.8
     - os: linux
+      dist: trusty
       compiler: clang
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
           packages:
             - clang-3.8
       env: CXX_BIN=clang++-3.8
