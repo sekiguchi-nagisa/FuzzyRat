@@ -1,6 +1,27 @@
 cmake_minimum_required(VERSION 2.7)
 project(FuzzyRat)
 
+#++++++++++++++++++++++++#
+#     init submodule     #
+#++++++++++++++++++++++++#
+
+execute_process(COMMAND git submodule update --init)
+
+
+#+++++++++++++++++++++++++++++++++#
+#     set coverage build type     #
+#+++++++++++++++++++++++++++++++++#
+
+set(SANITIZER "" CACHE STRING "which sanitizer to use")
+
+if(NOT ("${SANITIZER}" STREQUAL ""))
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=${SANITIZER} -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=${SANITIZER} -fno-omit-frame-pointer")
+endif()
+
+set(CMAKE_C_FLAGS_COVERAGE "-g -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS_COVERAGE "-g -fprofile-arcs -ftest-coverage")
+
 
 #+++++++++++++++++++#
 #     build re2c    #
@@ -38,7 +59,7 @@ add_custom_target(gen_lexer DEPENDS ${lexer_src})
 ##     libFuzzyRat     ##
 #########################
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++11")
 
 set(SOURCE_FILES
         ${lexer_src}
@@ -53,6 +74,10 @@ set(SOURCE_FILES
 
 include_directories(src)
 include_directories(include)
+
+set(GTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/gtest)
+add_subdirectory(${GTEST_DIR})
+
 add_library(FuzzyRat_static STATIC ${SOURCE_FILES})
 
 
@@ -62,6 +87,14 @@ add_library(FuzzyRat_static STATIC ${SOURCE_FILES})
 
 add_executable(FuzzyRat src/main.cpp)
 target_link_libraries(FuzzyRat FuzzyRat_static)
+
+
+#++++++++++++++++++++#
+#     setup test     #
+#++++++++++++++++++++#
+
+enable_testing()
+add_subdirectory(test)
 
 
 #+++++++++++++++++++++++++#

@@ -189,14 +189,20 @@ void FuzzyRat_deleteCode(FuzzyRatCode **code) {
     }
 }
 
-int FuzzyRat_exec(const FuzzyRatCode *code, FuzzyRatResult *result) {
+// hidden from public api
+int FuzzyRat_execImpl(const FuzzyRatCode *code, FuzzyRatResult *result, RandFactory &factory) {
     if(code != nullptr && result != nullptr) {
-        auto buf = eval(code->unit, const_cast<DefaultRandomFactory *>(&code->randomFactory));
+        auto buf = eval(code->unit, factory);
         result->size = buf.size();
         result->data = extract(std::move(buf));
         return 0;
     }
     return -1;
+}
+
+int FuzzyRat_exec(const FuzzyRatCode *code, FuzzyRatResult *result) {
+    DefaultRandomFactory factory;
+    return FuzzyRat_execImpl(code, result, factory);
 }
 
 void FuzzyRat_releaseResult(FuzzyRatResult *result) {

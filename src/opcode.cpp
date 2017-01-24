@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Nagisa Sekiguchi
+ * Copyright (C) 2016-2017 Nagisa Sekiguchi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,9 @@ struct EvalState {
     ydsh::ByteBuffer buffer;
     const CompiledUnit &unit;
     std::stack<OpCode *, std::vector<OpCode *>> retStack;
-    RandFactory *randFactory;
+    RandFactory &randFactory;
 
-    EvalState(const CompiledUnit &unit, RandFactory *randFactory) :
+    EvalState(const CompiledUnit &unit, RandFactory &randFactory) :
             buffer(16), unit(unit), retStack(std::vector<OpCode *>(INIT_STACK_SIZE)), randFactory(randFactory) {}
 
     ~EvalState() = default;
@@ -47,7 +47,7 @@ static OpCode *evalEmpty(const EmptyOp *code, EvalState &) {
 }
 
 static OpCode *evalAny(const AnyOp *code, EvalState &st) {    //FIXME: control character
-    char ch = st.randFactory->generate(32, 126);
+    char ch = st.randFactory.generate(32, 126);
     st.buffer += ch;
     return code->next().get();
 }
@@ -58,7 +58,7 @@ static OpCode *evalChar(const CharOp *code, EvalState &st) {
 }
 
 static OpCode *evalCharSet(const CharSetOp *code, EvalState &st) {
-    unsigned int index = st.randFactory->generate(0, code->map().population() - 1);
+    unsigned int index = st.randFactory.generate(0, code->map().population() - 1);
     st.buffer += code->map().lookup(index);
     return code->next().get();
 }
@@ -67,7 +67,7 @@ static OpCode *evalAlt(const AltOp *code, EvalState &st) {
     unsigned int size = code->opcodes().size();
 
 //    unsigned int index = std::uniform_int_distribution<unsigned int>(0, size - 1)(st.randomEngine);
-    unsigned int index = st.randFactory->generate(0, size - 1);
+    unsigned int index = st.randFactory.generate(0, size - 1);
     return code->opcodes()[index].get();
 }
 
@@ -102,7 +102,7 @@ static OpCode *eval(const OpCode *code, EvalState &st) {
 #undef GEN_CASE
 }
 
-ydsh::ByteBuffer eval(const CompiledUnit &unit, RandFactory *randFactory) {
+ydsh::ByteBuffer eval(const CompiledUnit &unit, RandFactory &randFactory) {
     EvalState state(unit, randFactory);
 
     auto entryPoint = std::make_shared<CallOp>(unit.startId());

@@ -23,7 +23,7 @@ using namespace ydsh;
 
 #define EACH_OPT(OP) \
     OP(HELP,    "--help", 0,             "show this help message") \
-    OP(HELP2,   "-h",     0,             "equivalent to '-h'") \
+    OP(HELP2,   "-h",     0,             "equivalent to '--help'") \
     OP(START,   "-s",     argv::HAS_ARG, "specify start production") \
     OP(COUNT,   "-c",     argv::HAS_ARG, "specify generation times") \
     OP(NOSPACE, "-n",     0,             "disable space insertion")

@@ -249,7 +249,7 @@ struct RandFactory {
 };
 
 
-ydsh::ByteBuffer eval(const CompiledUnit &unit, RandFactory *randFactory);
+ydsh::ByteBuffer eval(const CompiledUnit &unit, RandFactory &randFactory);
 
 
 } // namespace fuzzyrat

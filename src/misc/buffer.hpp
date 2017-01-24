@@ -19,9 +19,11 @@
 
 #include <cstring>
 #include <type_traits>
-#include <exception>
+#include <stdexcept>
+#include <string>
 #include <cassert>
 #include <cmath>
+#include <initializer_list>
 
 #include "noncopyable.h"
 
@@ -94,37 +96,48 @@ public:
             usedSize(0),
             data(allocArray(nullptr, this->maxSize)) { }
 
+    FlexBuffer(std::initializer_list<T> list) : FlexBuffer(list.size()) {
+        for(auto iter = list.begin(); iter != list.end(); ++iter) {
+            this->data[this->usedSize++] = *iter;
+        }
+    }
+
     /**
      * for lazy allocation
      */
     FlexBuffer() noexcept : maxSize(0), usedSize(0), data(nullptr) { }
 
-    FlexBuffer(FlexBuffer<T, SIZE_T> &&buffer) noexcept :
+    FlexBuffer(FlexBuffer &&buffer) noexcept :
             maxSize(buffer.maxSize), usedSize(buffer.usedSize), data(extract(std::move(buffer))) { }
 
     ~FlexBuffer() {
         free(this->data);
     }
 
-    FlexBuffer<T, SIZE_T> &operator=(FlexBuffer<T, SIZE_T> &&buffer) noexcept {
-        FlexBuffer<T, SIZE_T> tmp(std::move(buffer));
+    FlexBuffer &operator=(FlexBuffer &&buffer) noexcept {
+        FlexBuffer tmp(std::move(buffer));
         this->swap(tmp);
         return *this;
     }
 
-    FlexBuffer<T, SIZE_T> &operator+=(const T &value);
+    FlexBuffer &operator+=(const T &value);
 
     /**
      * buffer.data is not equivalent to this.data.
      */
-    FlexBuffer<T, SIZE_T> &operator+=(const FlexBuffer<T, SIZE_T> &buffer);
+    FlexBuffer &operator+=(const FlexBuffer &buffer);
 
-    FlexBuffer<T, SIZE_T> &operator+=(FlexBuffer<T, SIZE_T> &&buffer);
+    FlexBuffer &operator+=(FlexBuffer &&buffer);
+
+    template <std::size_t N>
+    FlexBuffer &operator+=(const T (&value)[N]) {
+        return this->append(value, N);
+    }
 
     /**
      * value is not equivalent to this.data.
      */
-    FlexBuffer<T, SIZE_T> &append(const T *value, size_type size);
+    FlexBuffer &append(const T *value, size_type size);
 
     size_type capacity() const noexcept {
         return this->maxSize;
@@ -146,7 +159,7 @@ public:
         this->usedSize = 0;
     }
 
-    void swap(FlexBuffer<T, SIZE_T> &buf) noexcept {
+    void swap(FlexBuffer &buf) noexcept {
         std::swap(this->usedSize, buf.usedSize);
         std::swap(this->maxSize, buf.maxSize);
         std::swap(this->data, buf.data);
@@ -229,7 +242,7 @@ public:
      * extract data. after call it, maxSize and usedSize is 0, and data is null.
      * call free() to release returned pointer.
      */
-    friend T *extract(FlexBuffer<T, SIZE_T> &&buf) noexcept {
+    friend T *extract(FlexBuffer &&buf) noexcept {
         buf.maxSize = 0;
         buf.usedSize = 0;
         T *ptr = buf.data;
