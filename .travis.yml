@@ -83,9 +83,35 @@ matrix:
             - clang-3.8
       env: CXX_BIN=clang++-3.8
 
+    # clang 3.9
+    - os: linux
+      dist: trusty
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-3.9
+          packages:
+            - clang-3.9
+      env: CXX_BIN=clang++-3.9
+
+    # clang 4.0
+    - os: linux
+      dist: trusty
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env: CXX_BIN=clang++-4.0
+
 script:
-  - cmake -DCMAKE_CXX_COMPILER=$CXX_BIN -DCMAKE_BUILD_TYPE=DEBUG
-  - make
+  - cmake . -DCMAKE_CXX_COMPILER=$CXX_BIN -DCMAKE_BUILD_TYPE=DEBUG
+  - make -j2
   - ctest --output-on-failure
 
 notifications:
