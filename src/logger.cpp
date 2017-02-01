@@ -64,7 +64,7 @@ Logger::Logger() : stream_(nullptr), level_(LogLevel::info) {
     }
 
     // log level
-    this->level_ = parseLevel(getenv("FRAT_LEVEL"), LogLevel::info);
+    this->level_ = parseLevel(getenv("FRAT_LEVEL"), LogLevel::error);
 }
 
 Logger::~Logger() {
