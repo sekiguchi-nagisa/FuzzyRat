@@ -73,8 +73,7 @@ protected:
     }
 };
 
-template <std::size_t N>
-ByteBuffer toBuf(const char (&str)[N]) {
+ByteBuffer operator ""_buf(const char *str, std::size_t N) {
     ByteBuffer buf(N);
     buf.append(str, N - 1);
     return buf;
@@ -82,18 +81,18 @@ ByteBuffer toBuf(const char (&str)[N]) {
 
 TEST_F(BaseTest, any) {
     this->setSequence({'a', 'A', '@', '7'});
-    ASSERT_(this->doTest("A = .... ;", toBuf("aA@7")));
+    ASSERT_(this->doTest("A = .... ;", "aA@7"_buf));
 }
 
 TEST_F(BaseTest, charset) {
     this->setSequence({1, 2, 0, 3});
-    ASSERT_(this->doTest("A = [abc] [abc] [abc] ;", toBuf("bca")));
+    ASSERT_(this->doTest("A = [abc] [abc] [abc] ;", "bca"_buf));
 
-    ASSERT_(this->doTest("A = [a-c_] [a-c_] [a-c_] [a-c_];", toBuf("cab_")));
+    ASSERT_(this->doTest("A = [a-c_] [a-c_] [a-c_] [a-c_];", "cab_"_buf));
 }
 
 TEST_F(BaseTest, string) {
-    ASSERT_(this->doTest("A = 'abcdefg' ;", toBuf("abcdefg")));
+    ASSERT_(this->doTest("A = 'abcdefg' ;", "abcdefg"_buf));
 }
 
 int main(int argc, char **argv) {
