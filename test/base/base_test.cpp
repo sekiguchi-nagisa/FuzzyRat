@@ -75,7 +75,7 @@ protected:
 
 ByteBuffer operator ""_buf(const char *str, std::size_t N) {
     ByteBuffer buf(N);
-    buf.append(str, N - 1);
+    buf.append(str, N);
     return buf;
 }
 
