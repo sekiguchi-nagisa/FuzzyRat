@@ -5,3 +5,4 @@
 include_directories(${GTEST_DIR}/include)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/base)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/logger)
