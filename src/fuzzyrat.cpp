@@ -122,7 +122,18 @@ static void defineSpace(GrammarState &state) {  //FIXME: support non-unit newlin
 
 static void parseAndVerify(GrammarState &state, Lexer &lexer) {
     try {
-        Parser()(state, lexer);
+        for(Parser parser(lexer); parser; ) {
+            auto pair = parser();
+            std::string name = lexer.toTokenText(pair.first);
+
+            if(state.startSymbol().empty()) {
+                state.setStartSymbol(name);
+            }
+
+            if(!state.map().insert(std::make_pair(std::move(name), std::move(pair.second))).second) {
+                throw SemanticError(SemanticError::DefinedProduction, pair.first);
+            }
+        }
 
         // check start production
         if(state.startSymbol().empty()) {

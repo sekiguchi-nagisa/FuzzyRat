@@ -27,10 +27,18 @@ using ParseError = ydsh::parser_base::ParseError<TokenKind>;
 
 class Parser : ydsh::parser_base::ParserBase<TokenKind, Lexer> {
 public:
-    Parser() = default;
+    Parser(Lexer &lexer) {
+        this->lexer = &lexer;
+        this->fetchNext();
+    }
+
     ~Parser() = default;
 
-    void operator()(GrammarState &state, Lexer &lexer);
+    operator bool() const {
+        return this->curKind != EOS;
+    }
+
+    std::pair<Token, NodePtr> operator()();
 
 private:
     std::pair<Token, NodePtr> parse_production();

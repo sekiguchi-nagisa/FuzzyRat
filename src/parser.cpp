@@ -41,23 +41,8 @@ namespace fuzzyrat {
 // ##     Parser     ##
 // ####################
 
-void Parser::operator()(GrammarState &state, Lexer &lexer) {
-    this->lexer = &lexer;
-    this->fetchNext();
-
-    while(this->curKind != EOS) {
-        auto pair = this->parse_production();
-        std::string name = this->lexer->toTokenText(pair.first);
-
-        if(state.startSymbol().empty()) {
-            state.setStartSymbol(name);
-        }
-
-        if(!state.map().insert(std::make_pair(std::move(name), std::move(pair.second))).second) {
-            throw SemanticError(SemanticError::DefinedProduction, pair.first);
-        }
-    }
-    this->expect(EOS);
+std::pair<Token, NodePtr> Parser::operator()() {
+    return this->parse_production();
 }
 
 std::pair<Token, NodePtr> Parser::parse_production() {
