@@ -103,11 +103,16 @@ void NodePrinter::visit(AlternativeNode &node) {
     node.rightNode()->accept(*this);
 }
 
+void NodePrinter::operator()(const std::string productionName, const NodePtr &node) {
+    this->stream << productionName << " = ";
+    node->accept(*this);
+    this->stream << ";" << std::endl;
+}
+
 void NodePrinter::operator()(const ProductionMap &map) {
     for(auto &e : map) {
-        this->stream << e.first << " = ";
-        e.second->accept(*this);
-        this->stream << ";" << std::endl << std::endl;
+        (*this)(e.first, e.second);
+        this->stream << std::endl;
     }
 }
 

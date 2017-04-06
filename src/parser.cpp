@@ -205,7 +205,7 @@ NodePtr Parser::parse_regexPrimary() {
     switch(this->curKind) {
     case POPEN: {
         this->expect(POPEN);
-        auto node = this->parse_alternative();
+        auto node = this->parse_regexAlt();
         this->expect(PCLOSE);
         return node;
     }

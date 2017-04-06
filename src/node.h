@@ -290,7 +290,10 @@ private:
     void printGroup(Node &node, bool exceptSeq = false);
 
 public:
+    void operator()(const std::string productionName, const NodePtr &node);
+
     void operator()(const ProductionMap &map);
+
 };
 
 
