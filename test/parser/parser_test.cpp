@@ -35,11 +35,13 @@ TEST_F(ParserTest, regex) {
     ASSERT_(this->test("A = ...;", "A = . . .;\n"));
     ASSERT_(this->test("A = '23';", "A = '23';\n"));
     ASSERT_(this->test("A = [ab-d4];", "A = [ab-d4];\n"));
+    ASSERT_(this->test("A = [\\^\\]\\\\];", "A = [\\^\\]\\\\];\n"));
     ASSERT_(this->test("A = 'D'  ;", "A = 'D';\n"));
     ASSERT_(this->test("A = B;", "A = B;\n"));
     ASSERT_(this->test("A = '2'|'3';", "A = '2' | '3';\n"));
     ASSERT_(this->test("A = [a-zA-Z]*;", "A = [a-zA-Z]*;\n"));
     ASSERT_(this->test("A = [_0-9]+;", "A = [_0-9]+;\n"));
+    ASSERT_(this->test("A = [^_0-9]+;", "A = [^_0-9]+;\n"));
     ASSERT_(this->test("A = .?;", "A = .?;\n"));
     ASSERT_(this->test("A = ( .. )+;", "A = (. .)+;\n"));
 }

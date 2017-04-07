@@ -47,7 +47,7 @@ public:
     BaseTest() = default;
     virtual ~BaseTest() = default;
 
-    void doTest(const char *code, ByteBuffer &&expected) {
+    void test(const char *code, ByteBuffer &&expected) {
         ASSERT_TRUE(code != nullptr);
         auto *input = FuzzyRat_newContext("<dummy>", code, strlen(code));
         ASSERT_TRUE(input != nullptr);
@@ -81,18 +81,28 @@ ByteBuffer operator ""_buf(const char *str, std::size_t N) {
 
 TEST_F(BaseTest, any) {
     this->setSequence({'a', 'A', '@', '7'});
-    ASSERT_(this->doTest("A = .... ;", "aA@7"_buf));
+    ASSERT_(this->test("A = .... ;", "aA@7"_buf));
 }
 
-TEST_F(BaseTest, charset) {
+TEST_F(BaseTest, charset1) {
     this->setSequence({1, 2, 0, 3});
-    ASSERT_(this->doTest("A = [abc] [abc] [abc] ;", "bca"_buf));
+    ASSERT_(this->test("A = [abc] [abc] [abc] ;", "bca"_buf));
 
-    ASSERT_(this->doTest("A = [a-c_] [a-c_] [a-c_] [a-c_];", "cab_"_buf));
+    ASSERT_(this->test("A = [a-c_] [a-c_] [a-c_] [a-c_];", "cab_"_buf));
+}
+
+TEST_F(BaseTest, charset2) {
+    this->setSequence({1, 2, 0, 3});
+    const char *src = "A = [^\\x00-\\x1F\\x7F];";
+
+    ASSERT_(this->test(src, "!"_buf));
+    ASSERT_(this->test(src, "\""_buf));
+    ASSERT_(this->test(src, " "_buf));
+    ASSERT_(this->test(src, "#"_buf));
 }
 
 TEST_F(BaseTest, string) {
-    ASSERT_(this->doTest("A = 'abcdefg' ;", "abcdefg"_buf));
+    ASSERT_(this->test("A = 'abcdefg' ;", "abcdefg"_buf));
 }
 
 int main(int argc, char **argv) {

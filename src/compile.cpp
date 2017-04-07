@@ -35,7 +35,7 @@ void Compiler::visit(AnyNode &) {   //FIXME: unicode
 }
 
 static int parseHex(std::string::const_iterator &iter, std::string::const_iterator end) {
-    assert(std::distance(end, iter) > 0);
+    assert(iter != end);
     assert(ydsh::isHex(*iter));
     int code = ydsh::toHex(*(iter++));
     if(iter != end && ydsh::isHex(*iter)) {
@@ -57,6 +57,7 @@ static int parseCharSet(std::string::const_iterator &iter, std::string::const_it
             case 'n': code = '\n'; break;
             case '\\':
             case ']':
+            case '^':
                 code = next;
                 break;
             case 'x':
@@ -81,6 +82,10 @@ void Compiler::visit(CharSetNode &node) {   //FIXME: unicode
 
     auto iter = node.value().cbegin() + 1;
     const auto end = node.value().cend() - 1;
+    bool negate = *iter == '^';
+    if(negate) {
+       iter++;
+    }
     while(iter != end) {
         int code = parseCharSet(iter, end);
         if(iter != end && *iter == '-' && iter + 1 != end) {
@@ -92,6 +97,9 @@ void Compiler::visit(CharSetNode &node) {   //FIXME: unicode
         }
     }
 
+    if(negate) {
+        map = ~map;
+    }
     this->generate<CharSetOp>(std::move(map));
 }
 
