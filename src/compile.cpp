@@ -209,9 +209,8 @@ CompiledUnit Compiler::operator()(const GrammarState &state) {
     // register production name to name map
     for(auto &e : state.map()) {
         auto pair = this->name2IdMap.insert(std::make_pair(e.first, this->idCount++));
-        if(!pair.second) {
-            fatal("already found production: %s\n", e.first.c_str());
-        }
+        assert(pair.second);
+        (void) pair;
     }
 
     // generate code
@@ -240,9 +239,7 @@ void Compiler::append(OpCodePtr &&code) {
 
 unsigned int Compiler::getProductionId(const std::string &name) {
     auto iter = this->name2IdMap.find(name);
-    if(iter == this->name2IdMap.end()) {
-        fatal("not found production: %s\n", name.c_str());
-    }
+    assert(iter != this->name2IdMap.end());
     return iter->second;
 }
 

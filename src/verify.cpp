@@ -172,16 +172,16 @@ void NodeSimplifier::visit(OptionNode &node) {
 
 /**
  * A* => A'
- *       A' =  | A A'
+ *       A' =  (A A' | )
  *
  */
 void NodeSimplifier::visit(ZeroOrMoreNode &node) {
     auto name = this->genRepeatName();
 
     auto alt = shared<AlternativeNode>(
-            shared<EmptyNode>(),
             shared<SequenceNode>(this->translate(node.exprNode()),
-                                 shared<NonTerminalNode>(node.token(), std::string(name))));
+                                 shared<NonTerminalNode>(node.token(), std::string(name))),
+            shared<EmptyNode>());
 
     this->map->insert(std::make_pair(name, std::move(alt)));
 
@@ -189,7 +189,7 @@ void NodeSimplifier::visit(ZeroOrMoreNode &node) {
 }
 
 /**
- * A+ => A A*
+ * A+ => (A A*)
  *
  */
 void NodeSimplifier::visit(OneOrMoreNode &node) {

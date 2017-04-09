@@ -81,28 +81,81 @@ ByteBuffer operator ""_buf(const char *str, std::size_t N) {
 
 TEST_F(BaseTest, any) {
     this->setSequence({'a', 'A', '@', '7'});
-    ASSERT_(this->test("A = .... ;", "aA@7"_buf));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test("A = .... ;", "aA@7"_buf)));
 }
 
 TEST_F(BaseTest, charset1) {
     this->setSequence({1, 2, 0, 3});
-    ASSERT_(this->test("A = [abc] [abc] [abc] ;", "bca"_buf));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test("A = [abc] [abc] [abc] ;", "bca"_buf)));
 
-    ASSERT_(this->test("A = [a-c_] [a-c_] [a-c_] [a-c_];", "cab_"_buf));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test("A = [a-c_] [a-c_] [a-c_] [a-c_];", "cab_"_buf)));
 }
 
 TEST_F(BaseTest, charset2) {
     this->setSequence({1, 2, 0, 3});
     const char *src = "A = [^\\x00-\\x1F\\x7F];";
 
-    ASSERT_(this->test(src, "!"_buf));
-    ASSERT_(this->test(src, "\""_buf));
-    ASSERT_(this->test(src, " "_buf));
-    ASSERT_(this->test(src, "#"_buf));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "!"_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "\""_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, " "_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "#"_buf)));
+}
+
+TEST_F(BaseTest, charset3) {
+    this->setSequence({1, 2, 0, 3});
+    const char *src = "A = [\\^\\]x\\\\];"; //       \ ] ^ x
+
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "]"_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "^"_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "\\"_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "x"_buf)));
 }
 
 TEST_F(BaseTest, string) {
-    ASSERT_(this->test("A = 'abcdefg' ;", "abcdefg"_buf));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test("A = 'abcdefg' ;", "abcdefg"_buf)));
+
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test("A = '\\x53\\n\\t\\\\' ;", "S\n\t\\"_buf)));
+}
+
+TEST_F(BaseTest, alter1) {
+    this->setSequence({2, 0, 1});
+    const char *src = "A = 'a' | 'b' | 'c';";
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "c"_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "a"_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "b"_buf)));
+}
+
+TEST_F(BaseTest, alter2) {
+    this->setSequence({0, 1});
+    const char *src = "A = 'a' ('b' | 'c') 'd';";
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "abd"_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "acd"_buf)));
+}
+
+TEST_F(BaseTest, option) {
+    this->setSequence({1, 0, 1});
+    const char *src = "A = 'a'?;";
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, ""_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "a"_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, ""_buf)));
+}
+
+TEST_F(BaseTest, zero) {
+    this->setSequence({1});
+    const char *src = "A = 'a'*;";
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, ""_buf)));
+
+    this->setSequence({0, 0, 1});
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "aa"_buf)));
+}
+
+TEST_F(BaseTest, one) {
+    this->setSequence({1});
+    const char *src = "A = 'a'+;";
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "a"_buf)));
+
+    this->setSequence({0, 0, 1});
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "aaa"_buf)));
 }
 
 int main(int argc, char **argv) {
