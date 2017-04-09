@@ -111,15 +111,6 @@ struct FuzzyRatCode {
     FuzzyRatCode(CompiledUnit &&unit) : unit(std::move(unit)), randomFactory() {}
 };
 
-static void defineSpace(GrammarState &state) {  //FIXME: support non-unit newline(carriage return)
-    const char *name = "_";
-
-    Token token = {0, 0};
-    auto node = shared<ZeroOrMoreNode>(shared<CharSetNode>(token, "[ \\t\\n]"), token);
-
-    state.map().insert(std::make_pair(name, std::move(node)));
-}
-
 static void parseAndVerify(GrammarState &state, Lexer &lexer) {
     try {
         for(Parser parser(lexer); parser; ) {
@@ -166,10 +157,6 @@ static void parseAndVerify(GrammarState &state, Lexer &lexer) {
 FuzzyRatCode *FuzzyRat_compile(const FuzzyRatInputContext *input) {
     GrammarState state;
     state.setStartSymbol(input->startProduction);
-
-    if(input->spaceInsertion) {
-        defineSpace(state);
-    }
 
     {
         Lexer lexer(input->sourceName.c_str(), input->buffer.get(), input->buffer.size());

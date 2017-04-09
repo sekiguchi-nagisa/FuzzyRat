@@ -33,14 +33,6 @@ void Node::accept(NodeVisitor &visitor) {
     }
 }
 
-static bool isUpperLetter(char ch) {
-    return std::isalpha(ch) && std::isupper(ch);
-}
-
-bool isLexicalProduction(const std::string &name) {
-    return !name.empty() && (name.front() == '_'  || isUpperLetter(name.front()));
-}
-
 // #########################
 // ##     NodePrinter     ##
 // #########################

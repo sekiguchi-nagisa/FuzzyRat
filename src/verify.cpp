@@ -338,10 +338,18 @@ void SpaceInserter::visit(AlternativeNode &node) {
     this->setRetNode(node);
 }
 
+static void defineSpace(GrammarState &state) {  //FIXME: support non-unit newline(carriage return)
+    Token token = {0, 0};
+    auto node = shared<ZeroOrMoreNode>(shared<CharSetNode>(token, "[ \\t\\n]"), token);
+
+    state.map().insert(std::make_pair(spaceName, std::move(node)));
+}
+
 void SpaceInserter::operator()(GrammarState &state) {
     {
         Token token = {0, 0};
-        this->space_ = shared<NonTerminalNode>(token, "_");
+        defineSpace(state);
+        this->space_ = shared<NonTerminalNode>(token, spaceName);
     }
 
     for(auto &e : state.map()) {

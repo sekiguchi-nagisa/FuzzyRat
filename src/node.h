@@ -262,8 +262,6 @@ public:
     }
 };
 
-bool isLexicalProduction(const std::string &name);
-
 using ProductionMap = std::unordered_map<std::string, NodePtr>;
 
 struct NodeVisitor {

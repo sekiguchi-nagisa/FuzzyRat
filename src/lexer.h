@@ -83,6 +83,16 @@ public:
     }
 };
 
+constexpr const char *spaceName = "_%";
+
+inline bool isUpperLetter(char ch) {
+    return std::isalpha(ch) && std::isupper(ch);
+}
+
+inline bool isLexicalProduction(const std::string &name) {
+    return !name.empty() && (name.front() == '_' || isUpperLetter(name.front()));
+}
+
 
 } // namespace
 
