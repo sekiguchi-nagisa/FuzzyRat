@@ -43,14 +43,22 @@ class BaseTest : public ::testing::Test {
 private:
     ControlledRandFactory randFactory;
 
+    std::string space;
+
 public:
     BaseTest() = default;
     virtual ~BaseTest() = default;
+
+    virtual void SetUp() {
+        this->setSpace("' '");
+    }
 
     void test(const char *code, ByteBuffer &&expected) {
         ASSERT_TRUE(code != nullptr);
         auto *input = FuzzyRat_newContext("<dummy>", code, strlen(code));
         ASSERT_TRUE(input != nullptr);
+
+        FuzzyRat_setSpacePattern(input, this->space.c_str());
 
         auto *cc = FuzzyRat_compile(input);
         FuzzyRat_deleteContext(&input);
@@ -70,6 +78,10 @@ public:
 protected:
     void setSequence(std::vector<unsigned int> &&v) {
         this->randFactory.setSequence(std::move(v));
+    }
+
+    void setSpace(const char *space) {
+        this->space = space;
     }
 };
 
@@ -130,12 +142,28 @@ TEST_F(BaseTest, alter1) {
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "acd"_buf)));
 }
 
+TEST_F(BaseTest, alter2) {
+    const char *src = "a = 'a' ('b' | 'c');";
+    this->setSequence({0, 1});
+
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, " a b "_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, " a c "_buf)));
+}
+
 TEST_F(BaseTest, option1) {
     this->setSequence({1, 0, 1});
     const char *src = "A = 'a'?;";
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, ""_buf)));
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "a"_buf)));
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, ""_buf)));
+}
+
+TEST_F(BaseTest, option2) {
+    const char *src = "a = 'a'?;";
+    this->setSequence({1, 0, 1});
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "  "_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, " a "_buf)));
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "  "_buf)));
 }
 
 TEST_F(BaseTest, zero1) {
@@ -147,6 +175,15 @@ TEST_F(BaseTest, zero1) {
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "aa"_buf)));
 }
 
+TEST_F(BaseTest, zero2) {
+    this->setSequence({1});
+    const char *src = "a = 'a'*;";
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "  "_buf)));
+
+    this->setSequence({0, 0, 1});
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "  a a "_buf)));
+}
+
 TEST_F(BaseTest, one1) {
     this->setSequence({1});
     const char *src = "A = 'a'+;";
@@ -154,6 +191,15 @@ TEST_F(BaseTest, one1) {
 
     this->setSequence({0, 0, 1});
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "aaa"_buf)));
+}
+
+TEST_F(BaseTest, one2) {
+    this->setSequence({1});
+    const char *src = "a = 'a'+;";
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "  a "_buf)));
+
+    this->setSequence({0, 0, 1});
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "  a a a "_buf)));
 }
 
 TEST_F(BaseTest, nterm1) {

@@ -40,6 +40,8 @@ public:
 
     std::pair<Token, NodePtr> operator()();
 
+    static NodePtr parsePattern(const std::string &pattern);
+
 private:
     std::pair<Token, NodePtr> parse_production();
     std::pair<Token, NodePtr> parse_nonTerminalProduction();

@@ -48,10 +48,10 @@ FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName, const char *da
 /**
  *
  * @param input
- * @param flag
- * if 0, unset option, otherwise, set option
+ * @param pattern
+ * if null, set default pattern. if empty string, disable space insertion.
  */
-void FuzzyRat_setSpaceInsertion(FuzzyRatInputContext *input, int flag);
+void FuzzyRat_setSpacePattern(FuzzyRatInputContext *input, const char *pattern);
 
 void FuzzyRat_deleteContext(FuzzyRatInputContext **input);
 

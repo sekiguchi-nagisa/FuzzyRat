@@ -258,7 +258,7 @@ public:
     SpaceInserter() = default;
     ~SpaceInserter() = default;
 
-    void operator()(GrammarState &state);
+    void operator()(GrammarState &state, NodePtr &&pattern);
 
 private:
 #define GEN_VISIT(E) void visit(E ## Node &node) override;
@@ -338,17 +338,10 @@ void SpaceInserter::visit(AlternativeNode &node) {
     this->setRetNode(node);
 }
 
-static void defineSpace(GrammarState &state) {  //FIXME: support non-unit newline(carriage return)
-    Token token = {0, 0};
-    auto node = shared<ZeroOrMoreNode>(shared<CharSetNode>(token, "[ \\t\\n]"), token);
-
-    state.map().insert(std::make_pair(spaceName, std::move(node)));
-}
-
-void SpaceInserter::operator()(GrammarState &state) {
+void SpaceInserter::operator()(GrammarState &state, NodePtr &&pattern) {
     {
         Token token = {0, 0};
-        defineSpace(state);
+        state.map().insert(std::make_pair(spaceName, std::move(pattern)));
         this->space_ = shared<NonTerminalNode>(token, spaceName);
     }
 
@@ -378,8 +371,8 @@ void SpaceInserter::operator()(GrammarState &state) {
     }
 }
 
-void insertSpace(GrammarState &state) {
-    SpaceInserter()(state);
+void insertSpace(GrammarState &state, NodePtr &&pattern) {
+    SpaceInserter()(state, std::move(pattern));
 }
 
 } // namespace fuzzyrat

@@ -84,6 +84,8 @@ public:
 };
 
 constexpr const char *spaceName = "_%";
+constexpr const char *space = "[ \\t\\n]*";
+
 
 inline bool isUpperLetter(char ch) {
     return std::isalpha(ch) && std::isupper(ch);

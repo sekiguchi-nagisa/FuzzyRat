@@ -26,7 +26,7 @@ void verify(GrammarState &state) throw(SemanticError);
 
 void desugar(ProductionMap &map);
 
-void insertSpace(GrammarState &state);
+void insertSpace(GrammarState &state, NodePtr &&pattern);
 
 } // namespace fuzzyrat
 

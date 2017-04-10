@@ -15,7 +15,6 @@
  */
 
 #include "parser.h"
-#include "error.h"
 
 #define EACH_LA_production(E) \
     E(TERM) \
@@ -43,6 +42,12 @@ namespace fuzzyrat {
 
 std::pair<Token, NodePtr> Parser::operator()() {
     return this->parse_production();
+}
+
+NodePtr Parser::parsePattern(const std::string &pattern) {
+    Lexer lexer(nullptr, pattern.c_str(), pattern.size());
+    Parser parser(lexer);
+    return parser.parse_regexAlt();
 }
 
 std::pair<Token, NodePtr> Parser::parse_production() {

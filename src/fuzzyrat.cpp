@@ -29,13 +29,13 @@
 using namespace fuzzyrat;
 
 struct FuzzyRatInputContext {
-    bool spaceInsertion;
+    std::string spacePattern;
     std::string sourceName;
     ydsh::ByteBuffer buffer;
     std::string startProduction;
 
     FuzzyRatInputContext(const char *sourceName, ydsh::ByteBuffer &&buffer) :
-            spaceInsertion(true), sourceName(sourceName), buffer(std::move(buffer)), startProduction() {}
+            spacePattern(space), sourceName(sourceName), buffer(std::move(buffer)), startProduction() {}
 };
 
 FuzzyRatInputContext *FuzzyRat_newContextFromFile(const char *sourceName) {
@@ -66,8 +66,8 @@ FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName, const char *da
     return new FuzzyRatInputContext(sourceName, std::move(buffer));
 }
 
-void FuzzyRat_setSpaceInsertion(FuzzyRatInputContext *input, int flag) {
-    input->spaceInsertion = flag != 0;
+void FuzzyRat_setSpacePattern(FuzzyRatInputContext *input, const char *pattern) {
+    input->spacePattern = pattern != nullptr ? pattern : space; //FIXME: support non-unit newline(carriage return)
 }
 
 void FuzzyRat_deleteContext(FuzzyRatInputContext **input) {
@@ -163,8 +163,8 @@ FuzzyRatCode *FuzzyRat_compile(const FuzzyRatInputContext *input) {
         parseAndVerify(state, lexer);
     }
 
-    if(input->spaceInsertion) {
-        insertSpace(state);
+    if(input->spacePattern.size()) {
+        insertSpace(state, Parser::parsePattern(input->spacePattern));
     }
     log<LogLevel::debug>([&](std::ostream &stream) {
         stream << "before desugar" << std::endl;

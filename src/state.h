@@ -28,7 +28,8 @@ namespace fuzzyrat {
 
 class Node;
 
-using ProductionMap = std::unordered_map<std::string, ydsh::IntrusivePtr<Node>>;
+using NodePtr = ydsh::IntrusivePtr<Node>;
+using ProductionMap = std::unordered_map<std::string, NodePtr>;
 
 class GrammarState {
 private:
