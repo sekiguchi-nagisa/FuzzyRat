@@ -18,14 +18,13 @@
 #define FUZZYRAT_VERIFY_H
 
 #include "error.h"
+#include "state.h"
 
 namespace fuzzyrat {
 
-class GrammarState;
-
 void verify(GrammarState &state) throw(SemanticError);
 
-void desugar(GrammarState &state);
+void desugar(ProductionMap &map);
 
 void insertSpace(GrammarState &state);
 

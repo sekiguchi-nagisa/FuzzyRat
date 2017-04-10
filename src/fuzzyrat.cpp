@@ -171,7 +171,7 @@ FuzzyRatCode *FuzzyRat_compile(const FuzzyRatInputContext *input) {
         NodePrinter printer(stream); printer(state.map());
     });
 
-    desugar(state);
+    desugar(state.map());
     log<LogLevel::debug>([&](std::ostream &stream) {
         stream << "after desugar" << std::endl;
         NodePrinter printer(stream); printer(state.map());

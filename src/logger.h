@@ -56,9 +56,9 @@ private:
 
     LogLevel level_;
 
+public:
     Logger();
 
-public:
     ~Logger();
 
     LogLevel level() const {

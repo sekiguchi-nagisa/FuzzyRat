@@ -245,8 +245,8 @@ std::string NodeSimplifier::genRepeatName() {
     return name;
 }
 
-void desugar(GrammarState &state) {
-    NodeSimplifier()(state.map());
+void desugar(ProductionMap &map) {
+    NodeSimplifier()(map);
 }
 
 

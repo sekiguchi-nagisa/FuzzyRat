@@ -123,16 +123,14 @@ TEST_F(BaseTest, alter1) {
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "c"_buf)));
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "a"_buf)));
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "b"_buf)));
-}
 
-TEST_F(BaseTest, alter2) {
     this->setSequence({0, 1});
-    const char *src = "A = 'a' ('b' | 'c') 'd';";
+    src = "A = 'a' ('b' | 'c') 'd';";
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "abd"_buf)));
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "acd"_buf)));
 }
 
-TEST_F(BaseTest, option) {
+TEST_F(BaseTest, option1) {
     this->setSequence({1, 0, 1});
     const char *src = "A = 'a'?;";
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, ""_buf)));
@@ -140,7 +138,7 @@ TEST_F(BaseTest, option) {
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, ""_buf)));
 }
 
-TEST_F(BaseTest, zero) {
+TEST_F(BaseTest, zero1) {
     this->setSequence({1});
     const char *src = "A = 'a'*;";
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, ""_buf)));
@@ -149,7 +147,7 @@ TEST_F(BaseTest, zero) {
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "aa"_buf)));
 }
 
-TEST_F(BaseTest, one) {
+TEST_F(BaseTest, one1) {
     this->setSequence({1});
     const char *src = "A = 'a'+;";
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "a"_buf)));
@@ -157,6 +155,13 @@ TEST_F(BaseTest, one) {
     this->setSequence({0, 0, 1});
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "aaa"_buf)));
 }
+
+TEST_F(BaseTest, nterm1) {
+    const char *src = "B = A; A = 'b' | 'a' A;";
+    this->setSequence({1, 0});
+    ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "ab"_buf)));
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
