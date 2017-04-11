@@ -59,10 +59,10 @@ TokenKind Lexer::nextToken(Token &token) {
       UNICODE    = '\\' [uU] [0-9a-fA-F]{4};
       TERM       = [_A-Z] [_A-Z0-9]*;
       NTERM      = [a-z] [_a-zA-Z0-9]*;
-      SCHAR      = [^\t\r\n'\\\000] | '\\' [trn'\\] | HEX;
-      DCHAR      = [^\t\r\n"\\\000] | '\\' [trn"\\] | HEX;
-      SETCHAR    = [^\t\r\n\\\]\000] | '\\' [trn\\\]^] | HEX;
-      COMMENT    = "//" [^\r\n\000]*;
+      SCHAR      = [\x20-\x26\x28-\x5B\x5D-\x7E] | '\\' [trn'\\] | HEX;
+      DCHAR      = [\x20-\x21\x23-\x5B\x5D-\x7E] | '\\' [trn"\\] | HEX;
+      SETCHAR    = [\x20-\x5B\x5E-\x7E] | '\\' [trn\\\]^] | HEX;
+      COMMENT    = "//" [\x20-\x7E]*;
      */
 
     INIT:
