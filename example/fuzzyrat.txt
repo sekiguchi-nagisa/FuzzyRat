@@ -1,0 +1,102 @@
+// definition of fuzzyrat syntax
+toplevel = (production)*
+         ;
+
+// lexer definition
+HEX = '\\' [x] [0-9a-fA-F] [0-9a-fA-F]?
+    ;
+
+SCHAR = [\x20-\x26\x28-\x5B\x5D-\x7E] | '\\' [trn'\\] | HEX
+      ;
+
+DCHAR = [\x20-\x21\x23-\x5B\x5D-\x7E] | '\\' [trn"\\] | HEX
+      ;
+
+SETCHAR = [\x20-\x5B\x5E-\x7E] | '\\' [trn\\\]^] | HEX
+        ;
+
+COMMENT = "//" [\x20-\x7E]*
+        ;
+
+
+TERM = [_A-Z] [_A-Z0-9]*
+     ;
+
+NTERM = [a-z] [_a-zA-Z0-9]*
+      ;
+
+DEF = [=:]
+    ;
+
+SEMI_COLON = ";"
+           ;
+
+DOT = "."
+    ;
+
+STRING = ['] SCHAR+ [']
+       | ["] DCHAR+ ["]
+       ;
+
+CHARSET = '[' SETCHAR ']'
+        ;
+
+ZERO = "*"
+     ;
+
+ONE = "+"
+    ;
+
+OPT = "?"
+    ;
+
+POPEN = "("
+      ;
+
+PCLOSE = ")"
+       ;
+
+ALT = "|"
+    ;
+
+
+// parser definition
+production = terminalProduction | nonTerminalProduction
+           ;
+
+nonTerminalProduction = NTERM DEF alternative SEMI_COLON
+                      ;
+
+alternative = sequence (ALT alternative)?
+            ;
+
+sequence = suffix sequence?
+         ;
+
+suffix = primary (ZERO | ONE | OPT)*
+       ;
+
+primary = POPEN alternative PCLOSE
+        | TERM
+        | NTERM
+        | STRING
+        ;
+
+terminalProduction = TERM DEF regexAlt SEMI_COLON
+                   ;
+
+regexAlt = regexSeq (ALT regexAlt)?
+         ;
+
+regexSeq = regexSuffix (regexSeq)?
+         ;
+
+regexSuffix = regexPrimary (ZERO | ONE | OPT)*
+            ;
+
+regexPrimary = POPEN regexAlt PCLOSE
+             | TERM
+             | DOT
+             | CHARSET
+             | STRING
+             ;
