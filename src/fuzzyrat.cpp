@@ -58,7 +58,7 @@ FuzzyRatInputContext *FuzzyRat_newContext(const char *sourceName, const char *da
     }
 
     if(sourceName == nullptr) {
-        sourceName = "(null)";
+        sourceName = "<null>";
     }
 
     ydsh::ByteBuffer buffer;

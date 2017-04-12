@@ -45,6 +45,8 @@ private:
 
     std::string space;
 
+    std::string start;
+
 public:
     BaseTest() = default;
     virtual ~BaseTest() = default;
@@ -55,10 +57,13 @@ public:
 
     void test(const char *code, ByteBuffer &&expected) {
         ASSERT_TRUE(code != nullptr);
-        auto *input = FuzzyRat_newContext("<dummy>", code, strlen(code));
+        auto *input = FuzzyRat_newContext(nullptr, code, strlen(code));
         ASSERT_TRUE(input != nullptr);
 
         FuzzyRat_setSpacePattern(input, this->space.c_str());
+        if(this->start.size()) {
+            FuzzyRat_setStartProduction(input, this->start.c_str());
+        }
 
         auto *cc = FuzzyRat_compile(input);
         FuzzyRat_deleteContext(&input);
@@ -82,6 +87,10 @@ protected:
 
     void setSpace(const char *space) {
         this->space = space;
+    }
+
+    void setStartProduction(const char *p) {
+        this->start = p;
     }
 };
 
@@ -208,6 +217,62 @@ TEST_F(BaseTest, nterm1) {
     ASSERT_NO_FATAL_FAILURE(ASSERT_(this->test(src, "ab"_buf)));
 }
 
+TEST_F(BaseTest, error1) {
+    const char *src = "A = 'a'";
+    const char *expect = R"(\[error\] \(<null>\):1: mismatched token: EOS, expected: SEMI_COLON)";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+    src = ".";
+    expect = R"(\[error\] \(<null>\):1: no viable alternative: DOT, expected: TERM, NTERM)";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+    src = "1";
+    expect = R"(\[error\] \(<null>\):1: invalid token, expected: TERM, NTERM)";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+
+    src = "A = ";
+    expect = R"(\[error\] \(<null>\):1: no viable alternative: EOS, expected: POPEN, TERM, DOT, CHARSET, STRING)";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+    src = "A = 1";
+    expect = R"(\[error\] \(<null>\):1: invalid token, expected: POPEN, TERM, DOT, CHARSET, STRING)";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+    src = "a = ";
+    expect = R"(\[error\] \(<null>\):1: no viable alternative: EOS, expected: POPEN, TERM, NTERM, STRING)";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+    src = "a = 1";
+    expect = R"(\[error\] \(<null>\):1: invalid token, expected: POPEN, TERM, NTERM, STRING)";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+}
+
+TEST_F(BaseTest, error2) {
+    const char *expect = "\\[error\\] start production not found";
+    const char *src = "   ";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+    expect = "\\[error\\] undefined start production: C";
+    src = "A = B;";
+    this->setStartProduction("C");
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+    src = "A = .; A = .;";
+    expect = R"(\[error\] \(<null>\):1: already defined production)";
+    this->setStartProduction("A");
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+
+    src = "A = B;";
+    expect = R"(\[error\] \(<null>\):1: undefined non-terminal)";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::ExitedWithCode(1), expect));
+}
+
+TEST_F(BaseTest, error3) {
+    const char *src = "a = 'a' a;";
+    const char *expect = "reach stack size limit";
+    ASSERT_NO_FATAL_FAILURE(EXPECT_EXIT({this->test(src, ""_buf); exit(0);}, ::testing::KilledBySignal(SIGABRT), expect));
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
