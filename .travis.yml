@@ -38,6 +38,18 @@ matrix:
             - g++-6
       env: CXX_BIN=g++-6
 
+    # gcc 7
+    - os: linux
+      dist: trusty
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env: CXX_BIN=g++-7
+
     # clang 3.5
     - os: linux
       dist: trusty

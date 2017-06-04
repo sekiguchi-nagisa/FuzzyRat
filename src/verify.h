@@ -22,7 +22,7 @@
 
 namespace fuzzyrat {
 
-void verify(GrammarState &state) throw(SemanticError);
+void verify(GrammarState &state);
 
 void desugar(ProductionMap &map);
 

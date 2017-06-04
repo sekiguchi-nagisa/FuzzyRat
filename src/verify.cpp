@@ -29,7 +29,7 @@ public:
     SymbolVerifier() : map(nullptr) {}
     ~SymbolVerifier() = default;
 
-    void operator()(ProductionMap &map) throw(SemanticError);
+    void operator()(ProductionMap &map);
 
 private:
 #define GEN_VISIT(E) void visit(E ## Node &node) override;
@@ -42,7 +42,7 @@ private:
 // ##     SymbolVerifier     ##
 // ############################
 
-void SymbolVerifier::operator()(ProductionMap &map) throw(SemanticError) {
+void SymbolVerifier::operator()(ProductionMap &map) {
     this->map = &map;
 
     for(auto &e : map) {
@@ -87,7 +87,7 @@ void SymbolVerifier::visit(ZeroOrMoreNode &node) {
     node.exprNode()->accept(*this);
 }
 
-void verify(GrammarState &state) throw(SemanticError) {
+void verify(GrammarState &state) {
     LOG_DEBUG("start verification");
     SymbolVerifier()(state.map());
 }
