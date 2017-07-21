@@ -23,10 +23,10 @@ namespace fuzzyrat {
 
 class SymbolVerifier : protected NodeVisitor {
 private:
-    ProductionMap *map;
+    ProductionMap *map{nullptr};
 
 public:
-    SymbolVerifier() : map(nullptr) {}
+    SymbolVerifier() = default;
     ~SymbolVerifier() = default;
 
     void operator()(ProductionMap &map);
@@ -122,12 +122,12 @@ protected:
 
 class NodeSimplifier : public NodeTranslator {
 private:
-    ProductionMap *map;
+    ProductionMap *map{nullptr};
 
-    unsigned int repeatIndex;
+    unsigned int repeatIndex{0};
 
 public:
-    NodeSimplifier() : map(nullptr), repeatIndex(0) {}
+    NodeSimplifier() = default;
     ~NodeSimplifier() = default;
 
     void operator()(ProductionMap &map);

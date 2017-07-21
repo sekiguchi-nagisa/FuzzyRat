@@ -35,7 +35,7 @@ struct FuzzyRatInputContext {
     std::string startProduction;
 
     FuzzyRatInputContext(const char *sourceName, ydsh::ByteBuffer &&buffer) :
-            spacePattern(space), sourceName(sourceName), buffer(std::move(buffer)), startProduction() {}
+            spacePattern(space), sourceName(sourceName), buffer(std::move(buffer)) {}
 };
 
 FuzzyRatInputContext *FuzzyRat_newContextFromFile(const char *sourceName) {
@@ -108,7 +108,7 @@ struct FuzzyRatCode {
     CompiledUnit unit;
     DefaultRandomFactory randomFactory;
 
-    FuzzyRatCode(CompiledUnit &&unit) : unit(std::move(unit)), randomFactory() {}
+    explicit FuzzyRatCode(CompiledUnit &&unit) : unit(std::move(unit)) {}
 };
 
 static void parseAndVerify(GrammarState &state, Lexer &lexer) {
@@ -163,7 +163,7 @@ FuzzyRatCode *FuzzyRat_compile(const FuzzyRatInputContext *input) {
         parseAndVerify(state, lexer);
     }
 
-    if(input->spacePattern.size()) {
+    if(!input->spacePattern.empty()) {
         insertSpace(state, Parser::parsePattern(input->spacePattern));
     }
     log<LogLevel::debug>([&](std::ostream &stream) {

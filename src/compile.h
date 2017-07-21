@@ -29,11 +29,11 @@ private:
     OpCodePtr head;
     OpCodePtr tail;
 
-    unsigned int idCount;
+    unsigned int idCount{0};
     std::unordered_map<std::string, unsigned int> name2IdMap;
 
 public:
-    Compiler() : head(nullptr), tail(nullptr), idCount(0), name2IdMap() {}
+    Compiler() : head(nullptr), tail(nullptr) {}
     ~Compiler() = default;
 
 #define GEN_VISIT(E) void visit(E ## Node &node) override;

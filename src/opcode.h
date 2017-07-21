@@ -53,7 +53,7 @@ protected:
 public:
     NON_COPYABLE(OpCode);
 
-    OpCode(OpKind kind) : kind_(kind), next_(nullptr) {}
+    explicit OpCode(OpKind kind) : kind_(kind), next_(nullptr) {}
     ~OpCode() = default;
 
     OpKind kind() const {
@@ -92,7 +92,7 @@ private:
     const int code_;
 
 public:
-    CharOp(int code) : OpCode(OpKind::Char), code_(code) {}
+    explicit CharOp(int code) : OpCode(OpKind::Char), code_(code) {}
     ~CharOp() = default;
 
     int code() const {
@@ -103,13 +103,13 @@ public:
 class AsciiMap {
 private:
     std::uint64_t map_[2];
-    unsigned int population_;
+    unsigned int population_{0};
 
     AsciiMap(std::uint64_t upper, std::uint64_t lower, unsigned int population) :
             map_{upper, lower}, population_(population) { }
 
 public:
-    AsciiMap() : map_{0, 0}, population_(0) { }
+    AsciiMap() : map_{0, 0} { }
 
     AsciiMap &operator|=(char ch) {
         if(!this->contains(ch)) {
@@ -127,7 +127,7 @@ public:
     }
 
     AsciiMap operator~() const {
-        return AsciiMap(~this->map_[0], ~this->map_[1], 128 - this->population_);
+        return {~this->map_[0], ~this->map_[1], 128 - this->population_};
     }
 
     bool contains(char ch) const {
@@ -165,7 +165,7 @@ private:
     AsciiMap map_;
 
 public:
-    CharSetOp(AsciiMap &&map) : OpCode(OpKind::CharSet), map_(std::move(map)) {}
+    explicit CharSetOp(AsciiMap &&map) : OpCode(OpKind::CharSet), map_(std::move(map)) {}
     ~CharSetOp() = default;
 
     const AsciiMap &map() const {
@@ -178,7 +178,7 @@ private:
     std::vector<OpCodePtr> opcodes_;
 
 public:
-    AltOp(std::vector<OpCodePtr> &&opcodes) : OpCode(OpKind::Alt), opcodes_(std::move(opcodes)) {}
+    explicit AltOp(std::vector<OpCodePtr> &&opcodes) : OpCode(OpKind::Alt), opcodes_(std::move(opcodes)) {}
     ~AltOp() = default;
 
     const std::vector<OpCodePtr> &opcodes() const {
@@ -191,7 +191,7 @@ private:
     unsigned int productionId_;
 
 public:
-    CallOp(unsigned int productionId) : OpCode(OpKind::Call), productionId_(productionId) {}
+    explicit CallOp(unsigned int productionId) : OpCode(OpKind::Call), productionId_(productionId) {}
     ~CallOp() = default;
 
     unsigned int productionId() const {
@@ -219,7 +219,7 @@ public:
     CompiledUnit(unsigned int startId, std::vector<OpCodePtr> &&codes) :
             statrtId_(startId), codes_(std::move(codes)) {}
 
-    CompiledUnit(CompiledUnit &&s) : statrtId_(s.statrtId_), codes_(std::move(s.codes_)) {}
+    CompiledUnit(CompiledUnit &&s) noexcept : statrtId_(s.statrtId_), codes_(std::move(s.codes_)) {}
 
     ~CompiledUnit() = default;
 

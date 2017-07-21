@@ -27,14 +27,14 @@ using ParseError = ydsh::parser_base::ParseError<TokenKind>;
 
 class Parser : ydsh::parser_base::ParserBase<TokenKind, Lexer> {
 public:
-    Parser(Lexer &lexer) {
+    explicit Parser(Lexer &lexer) {
         this->lexer = &lexer;
         this->fetchNext();
     }
 
     ~Parser() = default;
 
-    operator bool() const {
+    explicit operator bool() const {
         return this->curKind != EOS;
     }
 

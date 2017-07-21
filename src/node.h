@@ -277,7 +277,7 @@ private:
     std::ostream &stream;
 
 public:
-    NodePrinter(std::ostream &stream) : stream(stream) {}
+    explicit NodePrinter(std::ostream &stream) : stream(stream) {}
     ~NodePrinter() = default;
 
 private:
