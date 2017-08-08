@@ -54,7 +54,7 @@ public:
     NON_COPYABLE(OpCode);
 
     explicit OpCode(OpKind kind) : kind_(kind), next_(nullptr) {}
-    ~OpCode() = default;
+    virtual ~OpCode() = default;
 
     OpKind kind() const {
         return this->kind_;
