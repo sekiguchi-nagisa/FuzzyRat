@@ -35,20 +35,17 @@ enum OptionKind {
 #undef GEN_ENUM
 };
 
-static const argv::Option<OptionKind> options[] = {
-#define GEN_OPT(E, S, A, M) {E, S, A, M},
-        EACH_OPT(GEN_OPT)
-#undef GEN_OPT
-};
-
 int main(int argc, char **argv) {
     argv::CmdLines<OptionKind> cmdLines;
-    int index;
-    try {
-        index = argv::parseArgv(argc, argv, options, cmdLines);
-    } catch(const argv::ParseError &e) {
-        std::cerr << e.getMessage() << std::endl
-                  << options << std::endl;
+    argv::ArgvParser<OptionKind> parser = {
+#define GEN_OPT(E, S, A, M) {E, S, A, M},
+            EACH_OPT(GEN_OPT)
+#undef GEN_OPT
+    };
+    int index = parser(argc, argv, cmdLines);
+    if(parser.hasError()) {
+        fprintf(stderr, "%s\n", parser.getErrorMessage());
+        parser.printOption(stderr);
         exit(1);
     }
 
@@ -61,7 +58,7 @@ int main(int argc, char **argv) {
         switch(cmdline.first) {
         case HELP:
         case HELP2:
-            std::cout << options << std::endl;
+            parser.printOption(stdout);
             exit(0);
         case START:
             startSymbol = cmdline.second;
