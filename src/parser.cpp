@@ -40,7 +40,10 @@ namespace fuzzyrat {
 // ##     Parser     ##
 // ####################
 
-std::pair<Token, NodePtr> Parser::operator()() {
+#define TRY(E) \
+({auto v = E; if(this->hasError()) { return nullptr; } std::forward<decltype(v)>(v); })
+
+Production Parser::operator()() {
     return this->parse_production();
 }
 
@@ -50,7 +53,7 @@ NodePtr Parser::parsePattern(const std::string &pattern) {
     return parser.parse_regexAlt();
 }
 
-std::pair<Token, NodePtr> Parser::parse_production() {
+Production Parser::parse_production() {
     switch(this->curKind) {
     case TERM:
         return this->parse_terminalProduction();
@@ -62,35 +65,36 @@ std::pair<Token, NodePtr> Parser::parse_production() {
                 EACH_LA_production(GEN_ALTER)
 #undef GEN_ALTER
         };
-        this->alternativeError(kinds);
+        this->raiseNoViableAlterError(kinds);
+        return nullptr;
     }
 }
 
-std::pair<Token, NodePtr> Parser::parse_nonTerminalProduction() {
-    Token token = this->expect(NTERM);
-    this->expect(DEF);
-    auto node = this->parse_alternative();
-    this->expect(SEMI_COLON);
+Production Parser::parse_nonTerminalProduction() {
+    Token token = TRY(this->expect(NTERM));
+    TRY(this->expect(DEF));
+    auto node = TRY(this->parse_alternative());
+    TRY(this->expect(SEMI_COLON));
 
-    return std::make_pair(token, std::move(node));
+    return {token, std::move(node)};
 }
 
 NodePtr Parser::parse_alternative() {
-    auto leftNode = this->parse_sequence();
+    auto leftNode = TRY(this->parse_sequence());
     if(this->curKind == ALT) {
-        this->expect(ALT);
-        auto rightNode = this->parse_alternative();
+        this->expect(ALT); // always success
+        auto rightNode = TRY(this->parse_alternative());
         leftNode = shared<AlternativeNode>(std::move(leftNode), std::move(rightNode));
     }
     return leftNode;
 }
 
 NodePtr Parser::parse_sequence() {
-    auto leftNode = this->parse_suffix();
+    auto leftNode = TRY(this->parse_suffix());
     switch(this->curKind) {
 #define GEN_CASE(E) case E:
     EACH_LA_primary(GEN_CASE) {
-        auto rightNode = this->parse_sequence();
+        auto rightNode = TRY(this->parse_sequence());
         leftNode = shared<SequenceNode>(std::move(leftNode), std::move(rightNode));
         break;
     }
@@ -102,17 +106,17 @@ NodePtr Parser::parse_sequence() {
 }
 
 NodePtr Parser::parse_suffix() {
-    auto node = this->parse_primary();
+    auto node = TRY(this->parse_primary());
     for(bool next = true; next;) {
         switch(this->curKind) {
         case ZERO:
-            node = shared<ZeroOrMoreNode>(std::move(node), this->expect(ZERO));
+            node = shared<ZeroOrMoreNode>(std::move(node), this->expect(ZERO)); // always success
             break;
         case ONE:
-            node = shared<OneOrMoreNode>(std::move(node), this->expect(ONE));
+            node = shared<OneOrMoreNode>(std::move(node), this->expect(ONE));   // always success
             break;
         case OPT:
-            node = shared<OptionNode>(std::move(node), this->expect(OPT));
+            node = shared<OptionNode>(std::move(node), this->expect(OPT));  // always success
             break;
         default:
             next = false;
@@ -125,9 +129,9 @@ NodePtr Parser::parse_suffix() {
 NodePtr Parser::parse_primary() {
     switch(this->curKind) {
     case POPEN: {
-        this->expect(POPEN);
-        auto node = this->parse_alternative();
-        this->expect(PCLOSE);
+        this->expect(POPEN);    // always success
+        auto node = TRY(this->parse_alternative());
+        TRY(this->expect(PCLOSE));
         return node;
     }
     case TERM: {
@@ -137,7 +141,7 @@ NodePtr Parser::parse_primary() {
         return shared<NonTerminalNode>(token, this->lexer->toTokenText(token));
     }
     case STRING: {
-        Token token = this->expect(STRING);
+        Token token = this->expect(STRING); // always success
         return shared<StringNode>(token, this->lexer->toTokenText(token));
     }
     default:
@@ -146,35 +150,36 @@ NodePtr Parser::parse_primary() {
                 EACH_LA_primary(GEN_ALTER)
 #undef GEN_ALTER
         };
-        this->alternativeError(kinds);
+        this->raiseNoViableAlterError(kinds);
+        return nullptr;
     }
 }
 
-std::pair<Token, NodePtr> Parser::parse_terminalProduction() {
-    Token token = this->expect(TERM);
-    this->expect(DEF);
-    auto node = this->parse_regexAlt();
-    this->expect(SEMI_COLON);
+Production Parser::parse_terminalProduction() {
+    Token token = TRY(this->expect(TERM));
+    TRY(this->expect(DEF));
+    auto node = TRY(this->parse_regexAlt());
+    TRY(this->expect(SEMI_COLON));
 
-    return std::make_pair(token, std::move(node));
+    return {token, std::move(node)};
 }
 
 NodePtr Parser::parse_regexAlt() {
-    auto leftNode = this->parse_regexSeq();
+    auto leftNode = TRY(this->parse_regexSeq());
     if(this->curKind == ALT) {
-        this->expect(ALT);
-        auto rightNode = this->parse_regexAlt();
+        this->expect(ALT);  // always success
+        auto rightNode = TRY(this->parse_regexAlt());
         leftNode = shared<AlternativeNode>(std::move(leftNode), std::move(rightNode));
     }
     return leftNode;
 }
 
 NodePtr Parser::parse_regexSeq() {
-    auto leftNode = this->parse_regexSuffix();
+    auto leftNode = TRY(this->parse_regexSuffix());
     switch(this->curKind) {
 #define GEN_CASE(E) case E:
     EACH_LA_regexPrimary(GEN_CASE) {
-        auto rightNode = this->parse_regexSeq();
+        auto rightNode = TRY(this->parse_regexSeq());
         leftNode = shared<SequenceNode>(std::move(leftNode), std::move(rightNode));
         break;
     }
@@ -186,17 +191,17 @@ NodePtr Parser::parse_regexSeq() {
 }
 
 NodePtr Parser::parse_regexSuffix() {
-    auto node = this->parse_regexPrimary();
+    auto node = TRY(this->parse_regexPrimary());
     for(bool next = true; next;) {
         switch(this->curKind) {
         case ZERO:
-            node = shared<ZeroOrMoreNode>(std::move(node), this->expect(ZERO));
+            node = shared<ZeroOrMoreNode>(std::move(node), this->expect(ZERO)); // always success
             break;
         case ONE:
-            node = shared<OneOrMoreNode>(std::move(node), this->expect(ONE));
+            node = shared<OneOrMoreNode>(std::move(node), this->expect(ONE));   // always success
             break;
         case OPT:
-            node = shared<OptionNode>(std::move(node), this->expect(OPT));
+            node = shared<OptionNode>(std::move(node), this->expect(OPT));  // always success
             break;
         default:
             next = false;
@@ -209,23 +214,23 @@ NodePtr Parser::parse_regexSuffix() {
 NodePtr Parser::parse_regexPrimary() {
     switch(this->curKind) {
     case POPEN: {
-        this->expect(POPEN);
-        auto node = this->parse_regexAlt();
-        this->expect(PCLOSE);
+        this->expect(POPEN);    // always success
+        auto node = TRY(this->parse_regexAlt());
+        TRY(this->expect(PCLOSE));
         return node;
     }
     case TERM: {
-        Token token = this->expect(TERM);
+        Token token = this->expect(TERM);   // always success
         return shared<NonTerminalNode>(token, this->lexer->toTokenText(token));
     }
     case DOT:
-        return shared<AnyNode>(this->expect(DOT));
+        return shared<AnyNode>(this->expect(DOT));  // always success
     case CHARSET: {
-        Token token = this->expect(CHARSET);
+        Token token = this->expect(CHARSET);    // always success
         return shared<CharSetNode>(token, this->lexer->toTokenText(token));
     }
     case STRING: {
-        Token token = this->expect(STRING);
+        Token token = this->expect(STRING); // always success
         return shared<StringNode>(token, this->lexer->toTokenText(token));
     }
     default:
@@ -234,7 +239,8 @@ NodePtr Parser::parse_regexPrimary() {
                 EACH_LA_regexPrimary(GEN_ALTER)
 #undef GEN_ALTER
         };
-        this->alternativeError(kinds);
+        this->raiseNoViableAlterError(kinds);
+        return nullptr;
     }
 }
 

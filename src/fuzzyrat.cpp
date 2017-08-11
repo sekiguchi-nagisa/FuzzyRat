@@ -112,40 +112,47 @@ struct FuzzyRatCode {
 };
 
 static void parseAndVerify(GrammarState &state, Lexer &lexer) {
-    try {
-        for(Parser parser(lexer); parser; ) {
-            auto pair = parser();
-            std::string name = lexer.toTokenText(pair.first);
-
-            if(state.startSymbol().empty()) {
-                state.setStartSymbol(name);
-            }
-
-            if(!state.map().insert(std::make_pair(std::move(name), std::move(pair.second))).second) {
-                throw SemanticError(SemanticError::DefinedProduction, pair.first);
-            }
+    std::unique_ptr<SemanticError> error;
+    for(Parser parser(lexer); parser; ) {
+        auto pair = parser();
+        if(parser.hasError()) {
+            auto &e = parser.getError();
+            Token errorToken = lexer.shiftEOS(e.getErrorToken());
+            Token lineToken = lexer.getLineToken(errorToken);
+            LOG_ERROR(formatSourceName(lexer, errorToken)
+                              << " " << e.getMessage() << std::endl
+                              << lexer.toTokenText(lineToken) << std::endl
+                              << lexer.formatLineMarker(lineToken, errorToken));
         }
 
-        // check start production
+        std::string name = lexer.toTokenText(pair.token);
+
         if(state.startSymbol().empty()) {
-            LOG_ERROR("start production not found");
+            state.setStartSymbol(name);
         }
 
-        if(state.map().find(state.startSymbol()) != state.map().end()) {
-            LOG_INFO("start production: " << state.startSymbol());
-        } else {
-            LOG_ERROR("undefined start production: " << state.startSymbol());
+        if(!state.map().insert(std::make_pair(std::move(name), std::move(pair.node))).second) {
+            error.reset(new SemanticError(SemanticError::DefinedProduction, pair.token));
+            goto ERR;
         }
+    }
 
-        verify(state);
-    } catch(const ParseError &e) {
-        Token errorToken = lexer.shiftEOS(e.getErrorToken());
-        Token lineToken = lexer.getLineToken(errorToken);
-        LOG_ERROR(formatSourceName(lexer, errorToken)
-                          << " " << e.getMessage() << std::endl
-                          << lexer.toTokenText(lineToken) << std::endl
-                          << lexer.formatLineMarker(lineToken, errorToken));
-    } catch(const SemanticError &e) {
+    // check start production
+    if(state.startSymbol().empty()) {
+        LOG_ERROR("start production not found");
+    }
+
+    if(state.map().find(state.startSymbol()) != state.map().end()) {
+        LOG_INFO("start production: " << state.startSymbol());
+    } else {
+        LOG_ERROR("undefined start production: " << state.startSymbol());
+    }
+
+    // verify node
+    error = verify(state);
+    ERR:
+    if(error) {
+        auto &e = *error;
         Token lineToken = lexer.getLineToken(e.token());
         LOG_ERROR(formatSourceName(lexer, e.token())
                           << " " << toString(e.kind()) << std::endl
@@ -164,7 +171,11 @@ FuzzyRatCode *FuzzyRat_compile(const FuzzyRatInputContext *input) {
     }
 
     if(!input->spacePattern.empty()) {
-        insertSpace(state, Parser::parsePattern(input->spacePattern));
+        auto ret = Parser::parsePattern(input->spacePattern);
+        if(!ret) {
+            LOG_ERROR("invald space pattern: " << input->spacePattern);
+        }
+        insertSpace(state, std::move(ret));
     }
     log<LogLevel::debug>([&](std::ostream &stream) {
         stream << "before desugar" << std::endl;

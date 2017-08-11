@@ -15,6 +15,7 @@
  */
 
 #include <cstring>
+#include <ostream>
 
 #include "node.h"
 #include "misc/num.h"

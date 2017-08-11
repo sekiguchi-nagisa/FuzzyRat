@@ -24,7 +24,7 @@ public:
         std::stringstream stream;
         NodePrinter printer(stream);
 
-        printer(lexer.toTokenText(pair.first), pair.second);
+        printer(lexer.toTokenText(pair.token), pair.node);
 
         ASSERT_STREQ(expected, stream.str().c_str());
     }

@@ -22,7 +22,9 @@
 
 namespace fuzzyrat {
 
-void verify(GrammarState &state);
+using MaybeError = std::unique_ptr<SemanticError>;
+
+MaybeError verify(GrammarState &state);
 
 void desugar(ProductionMap &map);
 

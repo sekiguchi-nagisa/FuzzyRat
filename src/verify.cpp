@@ -21,7 +21,19 @@
 
 namespace fuzzyrat {
 
-class SymbolVerifier : protected NodeVisitor {
+static MaybeError OK() {
+    return nullptr;
+}
+
+template <typename ... Arg>
+static MaybeError ERR(Arg && ...arg) {
+    return MaybeError(new SemanticError(std::forward<Arg>(arg)...));
+}
+
+#define TRY(E) \
+({ auto v = E; if(v) { return v; }})
+
+class SymbolVerifier {
 private:
     ProductionMap *map{nullptr};
 
@@ -29,10 +41,12 @@ public:
     SymbolVerifier() = default;
     ~SymbolVerifier() = default;
 
-    void operator()(ProductionMap &map);
+    MaybeError operator()(ProductionMap &map);
 
 private:
-#define GEN_VISIT(E) void visit(E ## Node &node) override;
+    MaybeError dispatch(Node &node);
+
+#define GEN_VISIT(E) MaybeError visit(E ## Node &node);
     EACH_NODE_KIND(GEN_VISIT)
 #undef GEN_VISIT
 };
@@ -42,54 +56,69 @@ private:
 // ##     SymbolVerifier     ##
 // ############################
 
-void SymbolVerifier::operator()(ProductionMap &map) {
+MaybeError SymbolVerifier::operator()(ProductionMap &map) {
     this->map = &map;
 
     for(auto &e : map) {
-        e.second->accept(*this);
+        TRY(this->dispatch(*e.second));
+    }
+    return OK();
+}
+
+MaybeError SymbolVerifier::dispatch(Node &node) {
+    switch(node.kind()) {
+#define GEN_CASE(E) case NodeKind::E: return this->visit(static_cast<E ## Node &>(node));
+        EACH_NODE_KIND(GEN_CASE)
+#undef GEN_CASE
+    default:
+        return nullptr; // normally unreachable
     }
 }
 
-void SymbolVerifier::visit(EmptyNode &) {}
 
-void SymbolVerifier::visit(AnyNode &) {}
+MaybeError SymbolVerifier::visit(EmptyNode &) { return OK(); }
 
-void SymbolVerifier::visit(CharSetNode &) {}
+MaybeError SymbolVerifier::visit(AnyNode &) { return OK(); }
 
-void SymbolVerifier::visit(AlternativeNode &node) {
-    node.leftNode()->accept(*this);
-    node.rightNode()->accept(*this);
+MaybeError SymbolVerifier::visit(CharSetNode &) { return OK(); }
+
+MaybeError SymbolVerifier::visit(AlternativeNode &node) {
+    TRY(this->dispatch(*node.leftNode()));
+    TRY(this->dispatch(*node.rightNode()));
+    return OK();
 }
 
-void SymbolVerifier::visit(NonTerminalNode &node) {
+MaybeError SymbolVerifier::visit(NonTerminalNode &node) {
     auto iter = this->map->find(node.name());
     if(iter == this->map->end()) {
-        throw SemanticError(SemanticError::UndefinedNonTerminal, node.token());
+        return ERR(SemanticError::UndefinedNonTerminal, node.token());
     }
+    return OK();
 }
 
-void SymbolVerifier::visit(OneOrMoreNode &node) {
-    node.exprNode()->accept(*this);
+MaybeError SymbolVerifier::visit(OneOrMoreNode &node) {
+    return this->dispatch(*node.exprNode());
 }
 
-void SymbolVerifier::visit(OptionNode &node) {
-    node.exprNode()->accept(*this);
+MaybeError SymbolVerifier::visit(OptionNode &node) {
+    return this->dispatch(*node.exprNode());
 }
 
-void SymbolVerifier::visit(SequenceNode &node) {
-    node.leftNode()->accept(*this);
-    node.rightNode()->accept(*this);
+MaybeError SymbolVerifier::visit(SequenceNode &node) {
+    TRY(this->dispatch(*node.leftNode()));
+    TRY(this->dispatch(*node.rightNode()));
+    return OK();
 }
 
-void SymbolVerifier::visit(StringNode &) {}
+MaybeError SymbolVerifier::visit(StringNode &) { return OK(); }
 
-void SymbolVerifier::visit(ZeroOrMoreNode &node) {
-    node.exprNode()->accept(*this);
+MaybeError SymbolVerifier::visit(ZeroOrMoreNode &node) {
+    return this->dispatch(*node.exprNode());
 }
 
-void verify(GrammarState &state) {
+MaybeError verify(GrammarState &state) {
     LOG_DEBUG("start verification");
-    SymbolVerifier()(state.map());
+    return SymbolVerifier()(state.map());
 }
 
 class NodeTranslator : protected NodeVisitor {

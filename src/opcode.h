@@ -121,7 +121,7 @@ public:
         } else if(ch >= 64) {
             this->map_[1] |= (1L << (ch - 64));
         } else {
-            throw std::logic_error("must be ascii character");
+            fatal("must be ascii character\n");
         }
         return *this;
     }

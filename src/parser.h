@@ -23,9 +23,18 @@
 
 namespace fuzzyrat {
 
+struct Production {
+    Token token;
+    NodePtr node;
+
+    Production(Token token, NodePtr &&nodePtr) : token(token), node(std::move(nodePtr)) {}
+
+    Production(std::nullptr_t) : token() {}
+};
+
 using ParseError = ydsh::parser_base::ParseError<TokenKind>;
 
-class Parser : ydsh::parser_base::ParserBase<TokenKind, Lexer> {
+class Parser : public ydsh::parser_base::AbstractParser<TokenKind, Lexer> {
 public:
     explicit Parser(Lexer &lexer) {
         this->lexer = &lexer;
@@ -38,19 +47,19 @@ public:
         return this->curKind != EOS;
     }
 
-    std::pair<Token, NodePtr> operator()();
+    Production operator()();
 
     static NodePtr parsePattern(const std::string &pattern);
 
 private:
-    std::pair<Token, NodePtr> parse_production();
-    std::pair<Token, NodePtr> parse_nonTerminalProduction();
+    Production parse_production();
+    Production parse_nonTerminalProduction();
     NodePtr parse_alternative();
     NodePtr parse_sequence();
     NodePtr parse_suffix();
     NodePtr parse_primary();
 
-    std::pair<Token, NodePtr> parse_terminalProduction();
+    Production parse_terminalProduction();
     NodePtr parse_regexAlt();
     NodePtr parse_regexSeq();
     NodePtr parse_regexSuffix();
