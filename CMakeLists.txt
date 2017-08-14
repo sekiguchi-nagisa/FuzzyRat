@@ -27,7 +27,7 @@ set(CMAKE_CXX_FLAGS_COVERAGE "-g -fprofile-arcs -ftest-coverage")
 #     build re2c    #
 #+++++++++++++++++++#
 
-set(RE2C_V "0.16")
+set(RE2C_V "1.0.1")
 set(RE2C_URL "https://github.com/skvadrik/re2c/releases/download/${RE2C_V}/re2c-${RE2C_V}.tar.gz")
 set(RE2C_PATH ${CMAKE_CURRENT_BINARY_DIR}/re2c-${RE2C_V}.tar.gz)
 set(RE2C_DIR ${CMAKE_CURRENT_BINARY_DIR}/re2c-${RE2C_V})
