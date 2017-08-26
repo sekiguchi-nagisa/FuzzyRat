@@ -125,6 +125,19 @@ matrix:
             - clang-4.0
       env: CXX_BIN=clang++-4.0
 
+    # clang 5.0
+    - os: linux
+      dist: trusty
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+      env: CXX_BIN=clang++-5.0
+
 script:
   - cmake . -DCMAKE_CXX_COMPILER=$CXX_BIN -DCMAKE_BUILD_TYPE=DEBUG
   - make -j2
