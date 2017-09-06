@@ -115,13 +115,13 @@ NodePtr shared(Arg &&... arg) {
 class EmptyNode : public Node {
 public:
     EmptyNode() : Node(NodeKind::Empty, {0, 0}) {}
-    ~EmptyNode() = default;
+    ~EmptyNode() override = default;
 };
 
 class AnyNode : public Node {
 public:
     explicit AnyNode(Token token) : Node(NodeKind::Any, token) {}
-    ~AnyNode() = default;
+    ~AnyNode() override = default;
 };
 
 class StringNode : public Node {
@@ -130,7 +130,7 @@ private:
 
 public:
     StringNode(Token token, std::string &&value) : Node(NodeKind::String, token), value_(std::move(value)) {}
-    ~StringNode() = default;
+    ~StringNode() override = default;
 
     const std::string &value() const {
         return this->value_;
@@ -143,7 +143,7 @@ private:
 
 public:
     CharSetNode(Token token, std::string &&value) : Node(NodeKind::CharSet, token), value_(std::move(value)) {}
-    ~CharSetNode() = default;
+    ~CharSetNode() override = default;
 
     const std::string &value() const {
         return this->value_;
@@ -160,7 +160,7 @@ public:
         this->updateToken(token);
     }
 
-    ~ZeroOrMoreNode() = default;
+    ~ZeroOrMoreNode() override = default;
 
     NodePtr &exprNode() {
         return this->exprNode_;
@@ -177,7 +177,7 @@ public:
         this->updateToken(token);
     }
 
-    ~OneOrMoreNode() = default;
+    ~OneOrMoreNode() override = default;
 
     NodePtr &exprNode() {
         return this->exprNode_;
@@ -194,7 +194,7 @@ public:
         this->updateToken(token);
     }
 
-    ~OptionNode() = default;
+    ~OptionNode() override = default;
 
     NodePtr &exprNode() {
         return this->exprNode_;
@@ -213,7 +213,7 @@ public:
         this->updateToken(this->rightNode_->token());
     }
 
-    ~SequenceNode() = default;
+    ~SequenceNode() override = default;
 
     NodePtr &leftNode() {
         return this->leftNode_;
@@ -236,7 +236,7 @@ public:
         this->updateToken(this->rightNode_->token());
     }
 
-    ~AlternativeNode() = default;
+    ~AlternativeNode() override = default;
 
     NodePtr &leftNode() {
         return this->leftNode_;
@@ -255,7 +255,7 @@ public:
     NonTerminalNode(Token token, std::string &&name) :
             Node(NodeKind::NonTerminal, token), name_(std::move(name)) {}
 
-    ~NonTerminalNode() = default;
+    ~NonTerminalNode() override = default;
 
     const std::string &name() const {
         return this->name_;
@@ -278,7 +278,7 @@ private:
 
 public:
     explicit NodePrinter(std::ostream &stream) : stream(stream) {}
-    ~NodePrinter() = default;
+    ~NodePrinter() override = default;
 
 private:
 #define GEN_VISIT(E) void visit(E ## Node &node) override;
@@ -288,7 +288,7 @@ private:
     void printGroup(Node &node, bool exceptSeq = false);
 
 public:
-    void operator()(const std::string productionName, const NodePtr &node);
+    void operator()(const std::string &productionName, const NodePtr &node);
 
     void operator()(const ProductionMap &map);
 

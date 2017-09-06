@@ -97,7 +97,7 @@ private:
 
 public:
     DefaultRandomFactory() : engine(init()) {}
-    ~DefaultRandomFactory() = default;
+    ~DefaultRandomFactory() override = default;
 
     unsigned int generate(unsigned int start, unsigned int stop) override {
         return std::uniform_int_distribution<unsigned int>(start, stop)(this->engine);

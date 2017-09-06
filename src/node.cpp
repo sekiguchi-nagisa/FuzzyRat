@@ -96,7 +96,7 @@ void NodePrinter::visit(AlternativeNode &node) {
     node.rightNode()->accept(*this);
 }
 
-void NodePrinter::operator()(const std::string productionName, const NodePtr &node) {
+void NodePrinter::operator()(const std::string &productionName, const NodePtr &node) {
     this->stream << productionName << " = ";
     node->accept(*this);
     this->stream << ";" << std::endl;

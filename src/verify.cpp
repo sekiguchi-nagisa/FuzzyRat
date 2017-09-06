@@ -127,7 +127,8 @@ private:
 
 public:
     NodeTranslator() = default;
-    virtual ~NodeTranslator() = default;
+
+    ~NodeTranslator() override = default;
 
 protected:
     void setRetNode(Node &node) {
@@ -157,7 +158,7 @@ private:
 
 public:
     NodeSimplifier() = default;
-    ~NodeSimplifier() = default;
+    ~NodeSimplifier() override = default;
 
     void operator()(ProductionMap &map);
 
@@ -285,7 +286,7 @@ private:
 
 public:
     SpaceInserter() = default;
-    ~SpaceInserter() = default;
+    ~SpaceInserter() override = default;
 
     void operator()(GrammarState &state, NodePtr &&pattern);
 

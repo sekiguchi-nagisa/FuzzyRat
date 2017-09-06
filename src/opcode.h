@@ -79,12 +79,12 @@ public:
 
 struct EmptyOp : public OpCode {
     EmptyOp() : OpCode(OpKind::Empty) {}
-    ~EmptyOp() = default;
+    ~EmptyOp() override = default;
 };
 
 struct AnyOp : public OpCode {
     AnyOp() : OpCode(OpKind::Any) {}
-    ~AnyOp() = default;
+    ~AnyOp() override = default;
 };
 
 class CharOp : public OpCode {
@@ -93,7 +93,7 @@ private:
 
 public:
     explicit CharOp(int code) : OpCode(OpKind::Char), code_(code) {}
-    ~CharOp() = default;
+    ~CharOp() override = default;
 
     int code() const {
         return this->code_;
@@ -166,7 +166,7 @@ private:
 
 public:
     explicit CharSetOp(AsciiMap &&map) : OpCode(OpKind::CharSet), map_(std::move(map)) {}
-    ~CharSetOp() = default;
+    ~CharSetOp() override = default;
 
     const AsciiMap &map() const {
         return this->map_;
@@ -179,7 +179,7 @@ private:
 
 public:
     explicit AltOp(std::vector<OpCodePtr> &&opcodes) : OpCode(OpKind::Alt), opcodes_(std::move(opcodes)) {}
-    ~AltOp() = default;
+    ~AltOp() override = default;
 
     const std::vector<OpCodePtr> &opcodes() const {
         return this->opcodes_;
@@ -192,7 +192,7 @@ private:
 
 public:
     explicit CallOp(unsigned int productionId) : OpCode(OpKind::Call), productionId_(productionId) {}
-    ~CallOp() = default;
+    ~CallOp() override = default;
 
     unsigned int productionId() const {
         return this->productionId_;
@@ -201,7 +201,7 @@ public:
 
 struct RetOp : public OpCode {
     RetOp() : OpCode(OpKind::Ret) {}
-    ~RetOp() = default;
+    ~RetOp() override = default;
 };
 
 class CompiledUnit {

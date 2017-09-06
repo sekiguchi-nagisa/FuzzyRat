@@ -34,7 +34,7 @@ private:
 
 public:
     Compiler() : head(nullptr), tail(nullptr) {}
-    ~Compiler() = default;
+    ~Compiler() override = default;
 
 #define GEN_VISIT(E) void visit(E ## Node &node) override;
     EACH_NODE_KIND(GEN_VISIT)

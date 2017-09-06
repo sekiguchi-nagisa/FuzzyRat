@@ -97,7 +97,7 @@ static OpCode *eval(const OpCode *code, EvalState &st) {
     switch(code->kind()) {
     EACH_OP_KIND(GEN_CASE)
     default:
-        return nullptr;
+        return nullptr; // normally unreachable (due to suppress gcc warning)
     }
 #undef GEN_CASE
 }
